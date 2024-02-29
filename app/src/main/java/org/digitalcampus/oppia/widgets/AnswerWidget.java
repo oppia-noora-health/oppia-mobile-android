@@ -287,7 +287,8 @@ public abstract class AnswerWidget extends BaseWidget {
         binding.questionText.setVisibility(View.VISIBLE);
         // convert in case has any html special chars
         String questionText = q.getTitle(prefLang);
-        binding.questionText.setText(UIUtils.getFromHtmlAndTrim(questionText));
+        String boldText = String.format("<b>%s</b>", questionText);
+        binding.questionText.setText(UIUtils.getFromHtmlAndTrim(boldText));
 
         if (q.getProp("image") == null) {
             binding.questionImage.setVisibility(View.GONE);
