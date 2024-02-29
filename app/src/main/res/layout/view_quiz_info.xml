@@ -1,124 +1,157 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/tab_bg_color"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <FrameLayout
+    <LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/subtitle_bar_bg_color"
-        android:paddingBottom="100dp">
+        android:layout_height="match_parent"
+        android:background="@color/quiz_custom_bg_color"
+        android:gravity="center"
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/imageView16"
-            android:layout_width="@dimen/course_icon_size_small"
-            android:layout_height="@dimen/course_icon_size_small"
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@mipmap/img_quiz_intro" />
+
+        <Button
+            android:id="@+id/take_quiz_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="@dimen/activity_vertical_margin"
-            android:contentDescription="@string/quiz_attempt.title"
-            app:srcCompat="@drawable/ic_quiz"
-            app:tint="@color/activity_icon_background" />
+            android:layout_marginTop="30dp"
+            android:paddingStart="@dimen/padding_large"
+            android:paddingEnd="@dimen/padding_large"
+            android:text="@string/quiz_attempts.take_quiz"
+            tools:text="Take quiz" />
 
-    </FrameLayout>
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/course_card"
+    </LinearLayout>
+
+    <LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="-80dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="@dimen/activity_vertical_margin"
-        android:foreground="@drawable/bg_selectable"
-        app:contentPaddingBottom="@dimen/list_card_vertical_padding"
-        app:contentPaddingLeft="@dimen/list_card_horizontal_padding"
-        app:contentPaddingRight="@dimen/list_card_horizontal_padding"
-        app:contentPaddingTop="@dimen/list_card_vertical_padding">
+        android:layout_height="match_parent"
+        android:background="@color/tab_bg_color"
+        android:orientation="vertical"
+        android:visibility="gone">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/activity_vertical_margin"
-            android:layout_marginBottom="@dimen/activity_vertical_margin"
-            android:orientation="vertical">
+            android:background="@color/subtitle_bar_bg_color"
+            android:paddingBottom="100dp">
 
-            <TextView
-                android:id="@+id/info_num_questions"
-                style="@style/HeaderText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                tools:text="11 questions" />
-
-            <TextView
-                android:id="@+id/info_num_attempts"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                tools:text="Unlimited attempts" />
-
-            <ProgressBar
-                android:id="@+id/threshold_bar"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="130dp"
-                android:layout_height="3dp"
+            <ImageView
+                android:id="@+id/imageView16"
+                android:layout_width="@dimen/course_icon_size_small"
+                android:layout_height="@dimen/course_icon_size_small"
                 android:layout_gravity="center"
                 android:layout_marginTop="@dimen/activity_vertical_margin"
-                android:layout_marginBottom="-2dp"
-                android:progressDrawable="@drawable/progress_bar_quiz" />
+                android:contentDescription="@string/quiz_attempt.title"
+                app:srcCompat="@drawable/ic_quiz"
+                app:tint="@color/activity_icon_background" />
 
-            <TextView
-                android:id="@+id/info_threshold"
+        </FrameLayout>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/course_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="-80dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
+            android:foreground="@drawable/bg_selectable"
+            app:contentPaddingBottom="@dimen/list_card_vertical_padding"
+            app:contentPaddingLeft="@dimen/list_card_horizontal_padding"
+            app:contentPaddingRight="@dimen/list_card_horizontal_padding"
+            app:contentPaddingTop="@dimen/list_card_vertical_padding">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                tools:text="70% pass threshold" />
+                android:layout_marginTop="@dimen/activity_vertical_margin"
+                android:layout_marginBottom="@dimen/activity_vertical_margin"
+                android:orientation="vertical">
 
-            <Button
-                android:id="@+id/take_quiz_btn"
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/info_num_questions"
+                    style="@style/HeaderText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    tools:text="11 questions" />
+
+                <TextView
+                    android:id="@+id/info_num_attempts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    tools:text="Unlimited attempts" />
+
+                <ProgressBar
+                    android:id="@+id/threshold_bar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="130dp"
+                    android:layout_height="3dp"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="@dimen/activity_vertical_margin"
+                    android:layout_marginBottom="-2dp"
+                    android:progressDrawable="@drawable/progress_bar_quiz" />
+
+                <TextView
+                    android:id="@+id/info_threshold"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    tools:text="70% pass threshold" />
+
+                <Button
+                    android:id="@+id/take_quiz_btn_old"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="@dimen/list_card_vertical_padding"
+                    android:paddingStart="@dimen/padding_large"
+                    android:paddingEnd="@dimen/padding_large"
+                    android:text="@string/quiz_attempts.take_quiz"
+                    tools:text="Take quiz" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:foreground="@drawable/bg_selectable"
+            app:contentPaddingBottom="@dimen/list_card_vertical_padding"
+            app:contentPaddingLeft="@dimen/list_card_horizontal_padding"
+            app:contentPaddingRight="@dimen/list_card_horizontal_padding"
+            app:contentPaddingTop="@dimen/list_card_vertical_padding">
+
+            <TextView
+                android:id="@+id/quizzes_title"
+                style="@style/Highlight.Title"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="@dimen/list_card_vertical_padding"
-                android:paddingStart="@dimen/padding_large"
-                android:paddingEnd="@dimen/padding_large"
-                android:text="@string/quiz_attempts.take_quiz"
-                tools:text="Take quiz" />
+                android:text="@string/quiz_attempts.previous" />
 
-        </LinearLayout>
-
-    </androidx.cardview.widget.CardView>
-
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
-        android:foreground="@drawable/bg_selectable"
-        app:contentPaddingBottom="@dimen/list_card_vertical_padding"
-        app:contentPaddingLeft="@dimen/list_card_horizontal_padding"
-        app:contentPaddingRight="@dimen/list_card_horizontal_padding"
-        app:contentPaddingTop="@dimen/list_card_vertical_padding">
-
-        <TextView
-            android:id="@+id/quizzes_title"
-            style="@style/Highlight.Title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/quiz_attempts.previous" />
-
-        <include
-            layout="@layout/view_quiz_stats"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
-            android:layout_marginBottom="@dimen/activity_vertical_margin" />
+            <include
+                layout="@layout/view_quiz_stats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
+                android:layout_marginBottom="@dimen/activity_vertical_margin" />
 
 
-    </androidx.cardview.widget.CardView>
+        </androidx.cardview.widget.CardView>
 
-</LinearLayout>
+    </LinearLayout>
+</FrameLayout>
