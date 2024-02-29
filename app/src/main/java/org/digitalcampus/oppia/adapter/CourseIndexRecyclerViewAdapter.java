@@ -166,7 +166,7 @@ public class CourseIndexRecyclerViewAdapter extends ExpandableRecyclerView.Adapt
             String image = activity.getImageFilePath(courseLocation);
             Picasso.get().load(new File(image)).into(holder.binding.icon);
         } else {
-            int defaultActivityDrawable = activity.getDefaultResourceImage();
+            int defaultActivityDrawable = R.drawable.course_icon_placeholder;
             holder.binding.icon.setImageResource(defaultActivityDrawable);
         }
     }

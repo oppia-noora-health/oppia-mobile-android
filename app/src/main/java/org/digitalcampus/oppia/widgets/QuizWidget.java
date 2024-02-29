@@ -35,6 +35,7 @@ import org.digitalcampus.mobile.quiz.model.QuizQuestion;
 import org.digitalcampus.mobile.quiz.model.questiontypes.Description;
 import org.digitalcampus.oppia.activity.CourseActivity;
 import org.digitalcampus.oppia.activity.CourseQuizAttemptsActivity;
+import org.digitalcampus.oppia.activity.PrefsActivity;
 import org.digitalcampus.oppia.adapter.QuizAnswersFeedbackAdapter;
 import org.digitalcampus.oppia.application.SessionManager;
 import org.digitalcampus.oppia.database.DbHelper;
@@ -46,6 +47,7 @@ import org.digitalcampus.oppia.model.QuizStats;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class QuizWidget extends AnswerWidget {
 
@@ -197,6 +199,10 @@ public class QuizWidget extends AnswerWidget {
 
         numQuestions.setText(getString(R.string.widget_quiz_num_questions, quiz.getTotalNoQuestions()));
         thresholdBar.setProgress(quiz.getPassThreshold());
+
+        TextView tvTitle = info.findViewById(R.id.tv_quiz_title);
+        String currentLang = prefs.getString(PrefsActivity.PREF_CONTENT_LANGUAGE, Locale.getDefault().getLanguage());
+        tvTitle.setText(quiz.getTitle(currentLang));
 
         info.findViewById(R.id.take_quiz_btn).setOnClickListener(view -> checkPasswordProtectionAndShowQuestion());
         QuizStats stats = attemptsRepository.getQuizAttemptStats(getContext(), course.getCourseId(), activity.getDigest());

@@ -16,7 +16,7 @@
 
         <FrameLayout
             android:id="@+id/activity_icon"
-            android:layout_width="@dimen/activity_thumbnail_width"
+            android:layout_width="@dimen/activity_thumbnail_height"
             android:layout_height="@dimen/activity_thumbnail_height"
             android:layout_marginStart="6dp">
 
@@ -24,9 +24,8 @@
                 android:id="@+id/icon"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@color/tab_bg_color"
                 android:scaleType="centerCrop"
-                app:srcCompat="@drawable/default_icon_activity" />
+                app:srcCompat="@mipmap/noora_logo" />
 
             <ImageView
                 android:id="@+id/badge"
