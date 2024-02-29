@@ -1,16 +1,16 @@
-/* 
+/*
  * This file is part of OppiaMobile - https://digital-campus.org/
- * 
+ *
  * OppiaMobile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * OppiaMobile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with OppiaMobile. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -18,7 +18,6 @@
 package org.digitalcampus.oppia.widgets.quiz;
 
 import android.app.Activity;
-import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -34,68 +33,75 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class MultiChoiceWidget extends QuestionWidget{
+public class MultiChoiceWidget extends QuestionWidget {
 
-	public static final String TAG = MultiChoiceWidget.class.getSimpleName();
+    public static final String TAG = MultiChoiceWidget.class.getSimpleName();
 
-	private QuizQuestion question;
-	
-	public MultiChoiceWidget(Activity activity, View v, ViewGroup container, QuizQuestion q) {
-		super(activity, v, container, R.layout.widget_quiz_multichoice);
-		this.question = q;
-	}
+    private QuizQuestion question;
 
-	@Override
-	public void setQuestionResponses(List<String> currentAnswers) {
-		// not used for this widget
-	}
+    public MultiChoiceWidget(Activity activity, View v, ViewGroup container, QuizQuestion q) {
+        super(activity, v, container, R.layout.widget_quiz_multichoice);
+        this.question = q;
+    }
 
-	@Override
-	public void setQuestionResponses(List<Response> responses, List<String> currentAnswer) {
-		LinearLayout responsesLL = view.findViewById(R.id.questionresponses);
-    	responsesLL.removeAllViews();
-    	RadioGroup responsesRG = new RadioGroup(ctx);
-    	responsesRG.setId(R.id.multichoiceRadioGroup);
-    	responsesLL.addView(responsesRG);
-		String shuffle = question.getProp("shuffleanswers");
-		if ((shuffle != null) && shuffle.equals("1")){
-			Collections.shuffle(responses);
-		}
+    @Override
+    public void setQuestionResponses(List<String> currentAnswers) {
+        // not used for this widget
+    }
 
-    	int id = 1000+1;
-    	for (Response r : responses){
-    		RadioButton rb = new RadioButton(ctx, null, 0, R.style.QuizCheckableItem);
-			RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(
-				ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-			setResponseMarginInLayoutParams(params);
-    		rb.setId(id);
-			rb.setText(UIUtils.getFromHtmlAndTrim(r.getTitle(currentUserLang)));
-			responsesRG.addView(rb, params);
+    @Override
+    public void setQuestionResponses(List<Response> responses, List<String> currentAnswer) {
+        LinearLayout responsesLL = view.findViewById(R.id.questionresponses);
+        responsesLL.removeAllViews();
+        RadioGroup responsesRG = new RadioGroup(ctx);
+        responsesRG.setId(R.id.multichoiceRadioGroup);
+        responsesLL.addView(responsesRG);
+        String shuffle = question.getProp("shuffleanswers");
+        if ((shuffle != null) && shuffle.equals("1")) {
+            Collections.shuffle(responses);
+        }
+
+        String showStandardInstructions = question.getProp("show_standard_instructions");
+        View tvInstructions = view.findViewById(R.id.tv_instructions);
+        if (tvInstructions != null) {
+            boolean visible = showStandardInstructions != null && showStandardInstructions.equals("1");
+            tvInstructions.setVisibility(visible ? View.VISIBLE : View.GONE);
+        }
+
+        int id = 1000 + 1;
+        for (Response r : responses) {
+            RadioButton rb = new RadioButton(ctx, null, 0, R.style.QuizCheckableItem);
+            RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            setResponseMarginInLayoutParams(params);
+            rb.setId(id);
+            rb.setText(UIUtils.getFromHtmlAndTrim(r.getTitle(currentUserLang)));
+            responsesRG.addView(rb, params);
             for (String answer : currentAnswer) {
-                if (answer.equals(r.getTitle(currentUserLang))){
+                if (answer.equals(r.getTitle(currentUserLang))) {
                     rb.setChecked(true);
                 }
             }
-			id++;
-    	}
-		
-	}
-	
-	public List<String> getQuestionResponses(List<Response> responses){
-		RadioGroup responsesRG = view.findViewById(R.id.multichoiceRadioGroup);
-		int resp = responsesRG.getCheckedRadioButtonId();
-    	View rb = responsesRG.findViewById(resp);
-    	int idx = responsesRG.indexOfChild(rb);
-		List<String> response = new ArrayList<>();
-    	if (idx >= 0){
-			response.add(responses.get(idx).getTitle(currentUserLang));
-    	}
-		return response;
-	}
+            id++;
+        }
 
-	@Override
-	public List<String> getQuestionResponses() {
-		return new ArrayList<>();
-	}
+    }
+
+    public List<String> getQuestionResponses(List<Response> responses) {
+        RadioGroup responsesRG = view.findViewById(R.id.multichoiceRadioGroup);
+        int resp = responsesRG.getCheckedRadioButtonId();
+        View rb = responsesRG.findViewById(resp);
+        int idx = responsesRG.indexOfChild(rb);
+        List<String> response = new ArrayList<>();
+        if (idx >= 0) {
+            response.add(responses.get(idx).getTitle(currentUserLang));
+        }
+        return response;
+    }
+
+    @Override
+    public List<String> getQuestionResponses() {
+        return new ArrayList<>();
+    }
 
 }
