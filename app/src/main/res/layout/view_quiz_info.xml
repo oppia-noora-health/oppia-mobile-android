@@ -17,6 +17,13 @@
             android:layout_height="wrap_content"
             app:srcCompat="@mipmap/img_quiz_intro" />
 
+        <TextView
+            android:id="@+id/tv_quiz_title"
+            style="@style/TextBase"
+            android:layout_marginTop="30dp"
+            android:textColor="@color/white"
+            android:textSize="40sp"/>
+
         <Button
             android:id="@+id/take_quiz_btn"
             android:layout_width="wrap_content"
