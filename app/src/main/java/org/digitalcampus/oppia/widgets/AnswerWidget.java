@@ -516,14 +516,26 @@ public abstract class AnswerWidget extends BaseWidget {
 
         webview.getSettings().setDefaultFontSize(defaultFontSize);
         webview.getSettings().setAllowFileAccess(true);
-
+        webview.getSettings().setLoadsImagesAutomatically(true);
+        webview.getSettings().setAllowContentAccess(true);
         try {
-            String contents = FileUtils.readFile(url);
+            webview.getSettings().setDomStorageEnabled(true);
             webview.getSettings().setJavaScriptEnabled(true);
-            webview.loadDataWithBaseURL("file://" + course.getLocation() + File.separator, contents, "text/html", "utf-8", null);
+
+            String content =  "<html><head>";
+            content += "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>";
+            content += "<link href='file:///android_asset/www/feedback.css' rel='stylesheet' type='text/css'/>";
+            content += "</head>";
+            content += FileUtils.readFile(url);
+            content += "</html>";
+
+
+            webview.loadDataWithBaseURL(null, content, "text/html", "utf-8", null);
         } catch (IOException e) {
             webview.loadUrl("file://" + url);
         }
+
+
     }
 
     public void showResults() {
