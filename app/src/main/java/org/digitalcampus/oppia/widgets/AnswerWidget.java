@@ -518,13 +518,25 @@ public abstract class AnswerWidget extends BaseWidget {
         webview.getSettings().setAllowFileAccess(true);
 
         try {
-            String contents = FileUtils.readFile(url);
+
+            String contents =  "<html><head>";
+            contents += "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>";
+//            contents += "<link href='file:///android_asset/www/style.css' rel='stylesheet' type='text/css'/>";
+//            contents += "<link href='file:///android_asset/www/feedback.css' rel='stylesheet' type='text/css'/>";
+            contents += "</head>";
+            contents += FileUtils.readFile(url);
+            contents += "</html>";
+//            String contents = FileUtils.readFile(url);
             webview.getSettings().setJavaScriptEnabled(true);
-            webview.loadDataWithBaseURL("file://" + course.getLocation() + File.separator, contents, "text/html", "utf-8", null);
+
+            String location = course.getLocation();
+            webview.loadDataWithBaseURL(course.getLocation() + File.separator, contents , "text/html", "utf-8", null);
         } catch (IOException e) {
             webview.loadUrl("file://" + url);
         }
+
     }
+
 
     public void showResults() {
         clearMediaPlayer();
