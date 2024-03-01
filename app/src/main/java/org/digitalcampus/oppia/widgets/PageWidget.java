@@ -136,9 +136,9 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 			webview.addJavascriptInterface(backwardsCompatJSInterface, backwardsCompatJSInterface.getInterfaceExposedName());
 
             //We inject the interface to launch intents from the HTML
-			JSInterfaceForResourceImages imagesJSInterface = new JSInterfaceForResourceImages(getContext(), course.getLocation());
-			jsInterfaces.add(imagesJSInterface);
-            webview.addJavascriptInterface(imagesJSInterface, imagesJSInterface.getInterfaceExposedName());
+//			JSInterfaceForResourceImages imagesJSInterface = new JSInterfaceForResourceImages(getContext(), course.getLocation());
+//			jsInterfaces.add(imagesJSInterface);
+//            webview.addJavascriptInterface(imagesJSInterface, imagesJSInterface.getInterfaceExposedName());
 
 			JSInterfaceForInlineInput inputJSInterface = new JSInterfaceForInlineInput(getContext());
 			inputJSInterface.setOnInputEnteredListener(this);
