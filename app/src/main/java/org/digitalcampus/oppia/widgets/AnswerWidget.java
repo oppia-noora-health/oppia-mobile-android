@@ -28,7 +28,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.webkit.ConsoleMessage;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -394,7 +397,7 @@ public abstract class AnswerWidget extends BaseWidget {
             // save answer
             if (saveAnswer()) {
                 try {
-                    if (quiz.getShowFeedback() == Quiz.SHOW_FEEDBACK_ALWAYS
+                    if ((quiz.getShowFeedback() == Quiz.SHOW_FEEDBACK_ALWAYS || quiz.getShowFeedback() == Quiz.SHOW_FEEDBACK_ONLY_AFTER_QUESTION)
                             && !quiz.getCurrentQuestion().getFeedbackDisplayed()) {
 
                         String feedback = quiz.getCurrentQuestion().getFeedback(prefLang);
