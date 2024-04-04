@@ -66,6 +66,7 @@
             android:name="org.digitalcampus.oppia.activity.CourseActivity"
             android:label="@string/title_activity_course"
             android:theme="@style/Oppia.ToolbarTheme"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden|adjustResize" />
         <activity
             android:name="org.digitalcampus.oppia.activity.DownloadActivity"
