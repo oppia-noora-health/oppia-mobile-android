@@ -18,6 +18,7 @@
 package org.digitalcampus.oppia.widgets.quiz;
 
 import android.app.Activity;
+import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -70,7 +71,9 @@ public class MultiChoiceWidget extends QuestionWidget {
 
         int id = 1000 + 1;
         for (Response r : responses) {
+
             RadioButton rb = new RadioButton(ctx, null, 0, R.style.QuizCheckableItem);
+
             RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
             setResponseMarginInLayoutParams(params);

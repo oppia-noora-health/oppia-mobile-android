@@ -9,7 +9,7 @@ repositories {
 }
 
 def version_code = 112
-def version_name = "7.4.6-noora.2"
+def version_name = "7.4.7-noora.1"
 
 android {
 
