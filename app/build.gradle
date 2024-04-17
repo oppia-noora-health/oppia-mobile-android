@@ -30,7 +30,7 @@ android {
         versionCode version_code
         versionName version_name
 
-        applicationId "org.noorahealth.academy.indonesia"
+        applicationId "org.noorahealth.academy"
 
         minSdk 21
         targetSdk 33
