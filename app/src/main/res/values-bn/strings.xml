@@ -194,7 +194,6 @@
 
     <string name="reset_password_field"> ব্যবহারকারীর নাম অথবা ইমেইল</string>
     <string name="reset_password_description">অনুগ্রহ করে নিচে আপনার ব্যবহৃত নাম অথবা ইমেইল এড্রেস দিন এবংপাসওয়ার্ড পুনরায় সেট করার জন্য।</string>
- আপনার ইমেইলে একটি লিঙ্ক পাঠানো হবে 
     <string name="remember_username_description">অনুগ্রহ করে নিচে আপনার ইমেইল এড্রেস দিন এবং আপনার ইমেইলের মাধ্যমে ব্যবহৃত নাম স্মরণ করিয়ে দেয়া হবে।</string>
     <string name="yes">হ্যাঁ</string>
     <string name="no">না</string>
