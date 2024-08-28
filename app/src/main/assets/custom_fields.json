@@ -18,6 +18,30 @@
       "type":"int"
     },
     {
+      "name":"regency",
+      "label":"Regency/District",
+      "order":8,
+      "required":false,
+      "helper_text":"",
+      "type":"str"
+    },
+    {
+      "name":"facility",
+      "label":"Name of Facility",
+      "order":8,
+      "required":false,
+      "helper_text":"",
+      "type":"str"
+    },
+    {
+      "name":"designation",
+      "label":"Designation",
+      "order":8,
+      "required":false,
+      "helper_text":"",
+      "type":"str"
+    },
+    {
       "name":"pr1",
       "label":"Profile field 1",
       "order":11,
@@ -83,7 +107,10 @@
         "organisation",
         "gender",
         "age",
-        "jobtitle"
+        "jobtitle",
+        "regency",
+        "facility",
+        "designation"
       ]
     }
   ]
