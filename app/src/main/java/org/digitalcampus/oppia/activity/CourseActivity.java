@@ -72,6 +72,8 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
     private Section section;
     private Course course;
 
+    private ArrayList<Section> sectionsList;
+
     private int currentActivityNo = 0;
 
     private List<Activity> activities;
@@ -99,6 +101,27 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
         if (bundle != null) {
             section = (Section) bundle.getSerializable(Section.TAG);
             course = (Course) bundle.getSerializable(Course.TAG);
+
+            // Retrieve the
+            sectionsList = (ArrayList<Section>) getIntent().getSerializableExtra("sections");
+            // Check if nextSection exists
+            int currentSectionIndex = 0;
+            if (sectionsList != null) {
+                for (Section sec : sectionsList) {
+                    if (sec.getTitleJSONString().contentEquals(section.getTitleJSONString())) {
+
+                        break;
+                    }
+                    currentSectionIndex++;
+                }
+            }
+
+            if (currentSectionIndex < sectionsList.size() - 1) {
+                Section nextSection = sectionsList.get(currentSectionIndex + 1);
+                if (section.getActivities().size() == 1 && nextSection != null) {
+                    binding.nextCourse.setVisibility(View.VISIBLE);
+                }
+            }
 
             activities = section.getActivities();
             currentActivityNo = bundle.getInt(NUM_ACTIVITY_TAG);
@@ -138,6 +161,45 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
             }
 
         }
+
+        binding.nextCourse.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                // Check if nextSection exists
+                int currentSectionIndex = 0;
+                for(Section sec : sectionsList){
+                    if(sec.getTitleJSONString().contentEquals(section.getTitleJSONString())){
+
+                        break;
+                    }
+                    currentSectionIndex++;
+                }
+
+                // Verify that there's a next section available
+                if (currentSectionIndex < sectionsList.size() - 1) {
+
+                    Section nextSection = sectionsList.get(currentSectionIndex + 1);
+
+                    // Check if nextSection is non-null and proceed to open it
+                    if (nextSection != null) {
+                        Intent intent = getIntent();
+                        Bundle bundle = new Bundle();
+                        bundle.putSerializable(Section.TAG, nextSection);
+                        bundle.putSerializable(Course.TAG, course);
+                        bundle.putInt(CourseActivity.NUM_ACTIVITY_TAG, 0); // Start from the first activity in the new section
+                        intent.putExtras(bundle);
+                        finish();
+                        startActivity(intent);
+
+                    } else {
+                        finish();
+                    }
+                } else {
+                    finish();
+                }
+            }
+        });
     }
 
     @Override
@@ -401,6 +463,20 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
     @Override
     public void onTabSelected(TabLayout.Tab tab) {
         int tabSelected = tab.getPosition();
+        Activity selectedActivity = activities.get(tabSelected);
+
+        // Check if the selected activity is a quiz
+        if ("quiz".equalsIgnoreCase(selectedActivity.getActType())) {
+            binding.nextCourse.setVisibility(View.GONE);
+        } else {
+            // Only show the nextCourse button if it's the last tab
+            if (tabSelected == binding.tabsToolbar.getTabCount() - 1) {
+                binding.nextCourse.setVisibility(View.VISIBLE);
+            } else {
+                binding.nextCourse.setVisibility(View.GONE);
+            }
+        }
+
         Log.d(TAG, "Tab selected " + tabSelected + " current act " + currentActivityNo);
 
         if (canNavigateTo(tabSelected)) {
@@ -429,6 +505,19 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
     @Override
     public void onTabReselected(TabLayout.Tab tab) {
         int tabSelected = tab.getPosition();
+        Activity selectedActivity = activities.get(tabSelected);
+
+        // Check if the selected activity is a quiz
+        if ("quiz".equalsIgnoreCase(selectedActivity.getActType())) {
+            binding.nextCourse.setVisibility(View.GONE);
+        } else {
+            // Only show the nextCourse button if it's the last tab
+            if (tabSelected == binding.tabsToolbar.getTabCount() - 1) {
+                binding.nextCourse.setVisibility(View.VISIBLE);
+            } else {
+                binding.nextCourse.setVisibility(View.GONE);
+            }
+        }
         Log.d(TAG, "Tab selected " + tabSelected + " current act " + currentActivityNo);
 
         BaseWidget currentWidget = (BaseWidget) apAdapter.getItem(currentActivityNo);

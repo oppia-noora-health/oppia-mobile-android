@@ -65,6 +65,7 @@ class CourseXMLHandler extends DefaultLexicalHandler implements IMediaXMLHandler
     private static final String ATTR_TYPE = "type";
     private static final String ATTR_NAME = "name";
     private static final String ATTR_PASSWORD = "password";
+    private static final String ATTR_MIN_ACTIVITY_TIME = "activity_time";
 
     private long courseId;
     private long userId;
@@ -138,6 +139,13 @@ class CourseXMLHandler extends DefaultLexicalHandler implements IMediaXMLHandler
             currentActivity.setDigest(aAttributes.getValue(ATTR_DIGEST));
             currentActivity.setActType(aAttributes.getValue(ATTR_TYPE));
             currentActivity.setActId(Integer.parseInt(aAttributes.getValue(ATTR_ORDER)));
+            String min_activity_time = aAttributes.getValue(ATTR_MIN_ACTIVITY_TIME);
+            if (!TextUtilsJava.isEmpty(min_activity_time)){
+                currentActivity.setMinActvityTime(Integer.parseInt(min_activity_time));
+            }
+            else {
+                currentActivity.setMinActvityTime(3);
+            }
             actTitles = new ArrayList<>();
             actLocations = new ArrayList<>();
             actContents = new ArrayList<>();

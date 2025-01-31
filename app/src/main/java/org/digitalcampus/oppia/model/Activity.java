@@ -1,16 +1,16 @@
-/* 
+/*
  * This file is part of OppiaMobile - https://digital-campus.org/
- * 
+ *
  * OppiaMobile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * OppiaMobile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with OppiaMobile. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -32,14 +32,14 @@ import org.digitalcampus.oppia.utils.storage.FileUtils;
 
 
 public class Activity extends MultiLangInfoModel implements Serializable{
-	
+
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = -1548943805902073988L;
 
 	public static final String TAG = Activity.class.getSimpleName();
-	
+
 	private long courseId;
 	private int sectionId;
 	private int actId;
@@ -56,36 +56,37 @@ public class Activity extends MultiLangInfoModel implements Serializable{
 	private String mimeType;
 	private List<GamificationEvent> gamificationEvents = new ArrayList<>();
 	private int wordCount;
+	private int min_activity_time;
 
 	public Activity(){
 		// do nothing
 	}
-	
+
 	public boolean hasCustomImage(){
 		return this.customImage;
 	}
 
-    public String getImageFilePath(String prefix){
-        if(!prefix.endsWith(File.separator)){
-            prefix += File.separator;
-        }
-        return prefix + this.imageFile;
-    }
+	public String getImageFilePath(String prefix){
+		if(!prefix.endsWith(File.separator)){
+			prefix += File.separator;
+		}
+		return prefix + this.imageFile;
+	}
 
-    public int getDefaultResourceImage(){
-        if(actType.equals("quiz")){
-            return R.drawable.default_icon_quiz;
-        } else if (actType.equals("page") && this.hasMedia()){
-            return R.drawable.default_icon_video;
-        }
-        return R.drawable.default_icon_activity;
-    }
+	public int getDefaultResourceImage(){
+		if(actType.equals("quiz")){
+			return R.drawable.default_icon_quiz;
+		} else if (actType.equals("page") && this.hasMedia()){
+			return R.drawable.default_icon_video;
+		}
+		return R.drawable.default_icon_activity;
+	}
 
 	public void setImageFile(String imageFile) {
 		this.imageFile = imageFile;
 		this.customImage = true;
 	}
-	
+
 	public List<Media> getMedia() {
 		return media;
 	}
@@ -110,7 +111,7 @@ public class Activity extends MultiLangInfoModel implements Serializable{
 	public void setDigest(String digest) {
 		this.digest = digest;
 	}
-	
+
 	public long getCourseId() {
 		return courseId;
 	}
@@ -156,11 +157,11 @@ public class Activity extends MultiLangInfoModel implements Serializable{
 		}
 
 	}
-	
+
 	public void setLocations(List<Lang> locations) {
 		this.locations = locations;
 	}
-	
+
 	public String getContents(String lang) {
 		for(Lang l: contents){
 			if(l.getLanguage().equalsIgnoreCase(lang)){
@@ -190,7 +191,7 @@ public class Activity extends MultiLangInfoModel implements Serializable{
 		}
 		return null;
 	}
-	
+
 	public void setContents(List<Lang> contents) {
 		this.contents = contents;
 	}
@@ -198,11 +199,11 @@ public class Activity extends MultiLangInfoModel implements Serializable{
 	public boolean hasMedia(){
 		return !media.isEmpty();
 	}
-	
+
 	public void setCompleted(boolean completed){
 		this.completed = completed;
 	}
-	
+
 	public boolean getCompleted(){
 		return this.completed;
 	}
@@ -235,14 +236,14 @@ public class Activity extends MultiLangInfoModel implements Serializable{
 		gamificationEvents = events;
 	}
 
-    public GamificationEvent findGamificationEvent(String event) throws GamificationEventNotFound {
-        for(GamificationEvent ge: gamificationEvents){
-            if(ge.getEvent().equals(event)){
-                return ge;
-            }
-        }
-        throw new GamificationEventNotFound(event);
-    }
+	public GamificationEvent findGamificationEvent(String event) throws GamificationEventNotFound {
+		for(GamificationEvent ge: gamificationEvents){
+			if(ge.getEvent().equals(event)){
+				return ge;
+			}
+		}
+		throw new GamificationEventNotFound(event);
+	}
 
 	public int getWordCount() {
 		return wordCount;
@@ -250,5 +251,14 @@ public class Activity extends MultiLangInfoModel implements Serializable{
 
 	public void setWordCount(int wordCount) {
 		this.wordCount = wordCount;
+	}
+
+	public int getMinActvityTime() {
+		return min_activity_time;
+	}
+
+	public int setMinActvityTime(int min_activity_time) {
+		this.min_activity_time = min_activity_time;
+		return min_activity_time;
 	}
 }

@@ -4,8 +4,8 @@ apply plugin: 'com.android.application'
 apply from: '../jacoco.gradle'
 apply from: '../sonarqube.gradle'
 
-def version_code = 114
-def version_name = "7.4.9-noora.1"
+def version_code = 119
+def version_name = "7.4.9-noora.6"
 
 android {
 
@@ -20,7 +20,7 @@ android {
         logger.error('No properties file found. Using default values.')
     }
 
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         versionCode version_code
@@ -29,7 +29,7 @@ android {
         applicationId "org.noorahealth.academy"
 
         minSdk 21
-        targetSdk 33
+        targetSdk 34
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         // The following argument makes the Android Test Orchestrator run its
@@ -70,6 +70,15 @@ android {
         // Flag to enable support for the new language Java 8+ APIs: time, functional, concurrent...
         coreLibraryDesugaringEnabled true
     }
+
+//    signingConfigs {
+//        release {
+//            keyAlias 'oppia' // replace with your new alias
+//            keyPassword 'oppia2023'
+//            storeFile file('/home/gawtham/AndroidStudioProjects/oppia-mobile-android/noora-oppia-app.jks')
+//            storePassword 'oppia2023'
+//        }
+//    }
 
     buildTypes {
 
@@ -180,6 +189,7 @@ android {
         }
 
         release {
+//            signingConfig signingConfigs.release
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'

@@ -113,7 +113,7 @@ public class DownloadCoursesAdapter extends MultiChoiceRecyclerViewAdapter<Downl
                 } else {
                     actionBtnImageRes = R.drawable.ic_action_accept;
                     viewHolder.binding.downloadCourseBtn.setContentDescription(installedDescription);
-                    viewHolder.binding.downloadCourseBtn.setEnabled(false);
+                    viewHolder.binding.downloadCourseBtn.setEnabled(true);
                     viewHolder.binding.downloadCourseBtn.setVisibility(View.VISIBLE);
                 }
             } else {
@@ -153,6 +153,12 @@ public class DownloadCoursesAdapter extends MultiChoiceRecyclerViewAdapter<Downl
                     itemClickListener.onDownloadButtonClick(v, getAdapterPosition());
                 }
             });
+
+            binding.courseRow.setOnClickListener(view -> {
+                if (itemClickListener != null) {
+                    itemClickListener.onDownloadButtonClick(view, getAdapterPosition());
+                }
+            });
         }
 
     }
@@ -166,5 +172,5 @@ public class DownloadCoursesAdapter extends MultiChoiceRecyclerViewAdapter<Downl
         void onDownloadButtonClick(View view, int position);
     }
 }
- 
+
 

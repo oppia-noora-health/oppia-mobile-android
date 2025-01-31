@@ -1,16 +1,16 @@
-/* 
+/*
  * This file is part of OppiaMobile - https://digital-campus.org/
- * 
+ *
  * OppiaMobile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * OppiaMobile is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with OppiaMobile. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -138,7 +138,7 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 			jsInterfaces.add(backwardsCompatJSInterface);
 			webview.addJavascriptInterface(backwardsCompatJSInterface, backwardsCompatJSInterface.getInterfaceExposedName());
 
-            //We inject the interface to launch intents from the HTML
+			//We inject the interface to launch intents from the HTML
 //			JSInterfaceForResourceImages imagesJSInterface = new JSInterfaceForResourceImages(getContext(), course.getLocation());
 //			jsInterfaces.add(imagesJSInterface);
 //            webview.addJavascriptInterface(imagesJSInterface, imagesJSInterface.getInterfaceExposedName());
@@ -146,7 +146,7 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 			JSInterfaceForInlineInput inputJSInterface = new JSInterfaceForInlineInput(getContext());
 			inputJSInterface.setOnInputEnteredListener(this);
 			jsInterfaces.add(inputJSInterface);
-            webview.addJavascriptInterface(inputJSInterface, inputJSInterface.getInterfaceExposedName());
+			webview.addJavascriptInterface(inputJSInterface, inputJSInterface.getInterfaceExposedName());
 
 			JSInterfaceForAudioPlayer audioPlayerJSInterface = new JSInterfaceForAudioPlayer(getContext());
 			audioPlayerJSInterface.setOnPlayButtonClickListener(new JSInterfaceForAudioPlayer.OnPlayButtonClickListener() {
@@ -181,16 +181,16 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 
 		webview.setWebViewClient(new WebViewClient() {
 
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                //We execute the necessary JS code to bind our JavascriptInterfaces
-                for (JSInterface jsInterface : jsInterfaces){
+			@Override
+			public void onPageFinished(WebView view, String url) {
+				//We execute the necessary JS code to bind our JavascriptInterfaces
+				for (JSInterface jsInterface : jsInterfaces){
 					view.loadUrl(jsInterface.getJavascriptInjection());
 				}
 				view.evaluateJavascript("changeAudioSource('" + Storage.getMediaPath(getContext()) + "')", null);
-            }
+			}
 
-            // set up the page to intercept videos
+			// set up the page to intercept videos
 			@Override
 			public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
 				return handleUrl(request.getUrl().getPath());
@@ -286,10 +286,6 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 		}
 
 		long timetaken = this.getSpentTime();
-		if (BuildConfig.PAGE_COMPLETED_METHOD.equals(App.PAGE_COMPLETED_METHOD_TIME_SPENT)){
-			Log.d(TAG, "Time spent: " + timetaken + " | Min time (fixed): " + BuildConfig.PAGE_COMPLETED_TIME_SPENT);
-			return timetaken > BuildConfig.PAGE_COMPLETED_TIME_SPENT;
-		}
 
 		if (BuildConfig.PAGE_COMPLETED_METHOD.equals(App.PAGE_COMPLETED_METHOD_WPM)){
 			Activity a = DbHelper.getInstance(getContext()).getActivityByDigest(activity.getDigest());
@@ -297,8 +293,10 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 			Log.d(TAG, "Time spent: " + timetaken + " | Min time (WPM): " + minTimeToRead);
 			return timetaken > minTimeToRead;
 		}
-		return timetaken > App.PAGE_READ_TIME;
 
+		Activity a = DbHelper.getInstance(getContext()).getActivityByDigest(this.activity.getDigest());
+		Log.d(TAG, "Time spent: " + timetaken + " | Min time (configurable db): " + a.getMinActvityTime());
+		return  timetaken >= a.getMinActvityTime();
 	}
 
 	public void saveTracker() {
@@ -307,8 +305,9 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 		}
 
 		long timetaken = this.getSpentTime();
+		Activity a = DbHelper.getInstance(getContext()).getActivityByDigest(activity.getDigest());
 		// only save tracker if over the time
-		if (timetaken < App.PAGE_READ_TIME) {
+		if (timetaken < a.getMinActvityTime()) {
 			return;
 		}
 

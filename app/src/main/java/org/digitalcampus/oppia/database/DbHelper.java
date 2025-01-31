@@ -77,7 +77,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
     private static final String TAG = DbHelper.class.getSimpleName();
     public static final String DB_NAME = "mobilelearning.db";
-    public static final int DB_VERSION = 50;
+    public static final int DB_VERSION = 51;
     private static final String TEXT = "text";
     private static final String DESC = "DESC";
     private static final String AND = " AND ";
@@ -93,8 +93,10 @@ public class DbHelper extends SQLiteOpenHelper {
     private static final String STR_ALTER_TABLE = "ALTER TABLE ";
     private static final String STR_INT_PRIMARY_KEY_AUTO = " integer primary key autoincrement, ";
     private static final String STR_INT_COMMA = " int, ";
+    private static final String STR_INT = " int ";
     private static final String STR_TEXT_COMMA = " text, ";
     private static final String STR_INT_DEFAULT_O = " integer default 0";
+    private static final String STR_INT_DEFAULT_3 = " integer default 3";
     private static final String STR_DROP_IF_EXISTS = "drop table if exists ";
     private static final String STR_ADD_COLUMN = " ADD COLUMN ";
     private static final String STR_TEXT_NULL = " text null";
@@ -139,6 +141,7 @@ public class DbHelper extends SQLiteOpenHelper {
     private static final String ACTIVITY_C_ENDDATE = "enddate";
     private static final String ACTIVITY_C_TITLE = "title";
     private static final String ACTIVITY_C_WORDCOUNT = "wordcount";
+    private static final String ACTIVITY_C_MIN_ACTIVITY_TIME = "min_activity_time";
 
     private static final String ACTIVITY_GAME_TABLE = "ActivityGamification";
     private static final String ACTIVITY_GAME_C_ID = BaseColumns._ID;
@@ -352,7 +355,8 @@ public class DbHelper extends SQLiteOpenHelper {
                 + ACTIVITY_C_ENDDATE + " datetime null, "
                 + ACTIVITY_C_ACTIVITYDIGEST + STR_TEXT_COMMA
                 + ACTIVITY_C_WORDCOUNT + STR_INT_COMMA
-                + ACTIVITY_C_TITLE + " " + TEXT + ")";
+                + ACTIVITY_C_TITLE + " " + TEXT + ","
+                + ACTIVITY_C_MIN_ACTIVITY_TIME + STR_INT+")";
         db.execSQL(aSql);
     }
 
@@ -747,6 +751,10 @@ public class DbHelper extends SQLiteOpenHelper {
             String sql1 = STR_ALTER_TABLE + COURSE_TABLE + STR_ADD_COLUMN + COURSE_C_RESTRICTED + STR_INT_DEFAULT_O + ";";
             db.execSQL(sql1);
         }
+
+        if (oldVersion < 51) {
+            db.execSQL(STR_ALTER_TABLE + ACTIVITY_TABLE + STR_ADD_COLUMN + ACTIVITY_C_MIN_ACTIVITY_TIME+ STR_INT_DEFAULT_3 + ";");
+        }
     }
 
 
@@ -1036,6 +1044,7 @@ public class DbHelper extends SQLiteOpenHelper {
             values.put(ACTIVITY_C_ACTTYPE, a.getActType());
             values.put(ACTIVITY_C_ACTIVITYDIGEST, a.getDigest());
             values.put(ACTIVITY_C_TITLE, a.getTitleJSONString());
+            values.put(ACTIVITY_C_MIN_ACTIVITY_TIME, a.getMinActvityTime());
             db.insertOrThrow(ACTIVITY_TABLE, null, values);
         }
         endTransaction(true);
@@ -1170,8 +1179,8 @@ public class DbHelper extends SQLiteOpenHelper {
         String order = COURSE_C_ORDER_PRIORITY + " " + DESC + ", " + COURSE_C_TITLE + " ASC";
         String username = getUsername(userId);
         Cursor c = db.rawQuery(
-            selectCoursesAndRestrictByCohort(username)
-                + " ORDER BY " + order, null);
+                selectCoursesAndRestrictByCohort(username)
+                        + " ORDER BY " + order, null);
         c.moveToFirst();
         while (!c.isAfterLast()) {
             Course course = setupCourseObject(c);
@@ -1303,6 +1312,7 @@ public class DbHelper extends SQLiteOpenHelper {
             activity.setDigest(c.getString(c.getColumnIndex(ACTIVITY_C_ACTIVITYDIGEST)));
             activity.setTitlesFromJSONString(c.getString(c.getColumnIndex(ACTIVITY_C_TITLE)));
             activity.setActType(c.getString(c.getColumnIndex(ACTIVITY_C_ACTTYPE)));
+            activity.setMinActvityTime(c.getInt(c.getColumnIndex(ACTIVITY_C_MIN_ACTIVITY_TIME)));
             activities.add(activity);
             c.moveToNext();
         }
@@ -2410,6 +2420,7 @@ public class DbHelper extends SQLiteOpenHelper {
                 a.setTitlesFromJSONString(c.getString(c.getColumnIndex(ACTIVITY_C_TITLE)));
                 a.setSectionId(c.getInt(c.getColumnIndex(ACTIVITY_C_SECTIONID)));
                 a.setWordCount(c.getInt(c.getColumnIndex(ACTIVITY_C_WORDCOUNT)));
+                a.setMinActvityTime(c.getInt(c.getColumnIndex(ACTIVITY_C_MIN_ACTIVITY_TIME)));
             }
             c.moveToNext();
         }

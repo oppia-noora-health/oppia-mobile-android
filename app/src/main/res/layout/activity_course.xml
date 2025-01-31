@@ -14,7 +14,8 @@
             android:id="@+id/activity_widget_pager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" >
+        </org.digitalcampus.oppia.utils.ui.WebViewPager>
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appbar"
@@ -36,6 +37,16 @@
         </com.google.android.material.appbar.AppBarLayout>
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <Button
+        android:id="@+id/next_course"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Continue"
+        android:visibility="gone"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:theme="@style/PrimaryButton"/>
 
     <ScrollView
         android:id="@+id/unlock_topic_form"

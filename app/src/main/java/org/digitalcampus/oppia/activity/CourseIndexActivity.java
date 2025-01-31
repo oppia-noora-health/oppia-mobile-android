@@ -28,6 +28,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.work.Constraints;
@@ -67,7 +68,7 @@ public class CourseIndexActivity extends AppActivity implements OnSharedPreferen
     private CompleteCourse parsedCourse;
     private List<Section> sections;
     @Inject SharedPreferences prefs;
-    private CourseIndexRecyclerViewAdapter adapter;
+    public CourseIndexRecyclerViewAdapter adapter;
     private String digestJumpTo;
 
     @Inject
@@ -81,7 +82,7 @@ public class CourseIndexActivity extends AppActivity implements OnSharedPreferen
         super.onCreate(savedInstanceState);
         binding = ActivityCourseIndexBinding.inflate(LayoutInflater.from(this));
         setContentView(binding.getRoot());
-        
+
         getAppComponent().inject(this);
 
         prefs.registerOnSharedPreferenceChangeListener(this);
@@ -369,6 +370,7 @@ public class CourseIndexActivity extends AppActivity implements OnSharedPreferen
             tb.putSerializable(Section.TAG, s);
             tb.putSerializable(Course.TAG, course);
             tb.putSerializable(CourseActivity.NUM_ACTIVITY_TAG, position);
+            intent.putExtra("sections", new ArrayList<>(sections));
             intent.putExtras(tb);
             startActivity(intent);
         }

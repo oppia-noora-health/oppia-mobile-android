@@ -32,8 +32,10 @@ import androidx.core.content.ContextCompat;
 
 import org.digitalcampus.mobile.learning.R;
 import org.digitalcampus.mobile.learning.databinding.ActivityDownloadBinding;
+import org.digitalcampus.oppia.adapter.TagsAdapter;
 import org.digitalcampus.oppia.application.App;
 import org.digitalcampus.oppia.database.DbHelper;
+import org.digitalcampus.oppia.fragments.CoursesListFragment;
 import org.digitalcampus.oppia.model.CourseInstallViewAdapter;
 import org.digitalcampus.oppia.adapter.DownloadCoursesAdapter;
 import org.digitalcampus.oppia.analytics.Analytics;
@@ -96,6 +98,7 @@ public class DownloadActivity extends AppActivity implements APIRequestListener,
     @Override
     public void onStart() {
         super.onStart();
+
         initialize();
     }
 
@@ -114,7 +117,6 @@ public class DownloadActivity extends AppActivity implements APIRequestListener,
         mode = bundle.getInt(EXTRA_MODE);
 
         setUpRecyclerView();
-
         setUpScreen(mode, bundle);
     }
 
@@ -157,7 +159,6 @@ public class DownloadActivity extends AppActivity implements APIRequestListener,
     }
 
     private void setUpRecyclerView() {
-
         courses = new ArrayList<>();
         selected = new ArrayList<>();
         coursesAdapter = new DownloadCoursesAdapter(this, courses);
@@ -183,7 +184,6 @@ public class DownloadActivity extends AppActivity implements APIRequestListener,
 
             @Override
             public boolean onCreateActionMode(final androidx.appcompat.view.ActionMode mode, Menu menu) {
-
                 onPrepareOptionsMenu(menu);
                 binding.btnDownloadCourses.setOnClickListener(view -> {
                     for (CourseInstallViewAdapter course : selected) {
@@ -233,12 +233,15 @@ public class DownloadActivity extends AppActivity implements APIRequestListener,
             Log.d("course-download", "Clicked " + position);
             CourseInstallViewAdapter course = courses.get(position);
             // When installing, don't do anything on click
-            if (course.isInstalling()) return;
+
             if (course.isDownloading()) {
                 cancelCourseTask(course);
             } else if (course.isToInstall()) {
                 downloadCourse(course);
+            }else if (course.isInstalled()) {
+                openDownloadedCourse(course); // Handle the action for downloaded courses
             }
+            if (course.isInstalling()) return;
 
         });
 
@@ -247,6 +250,14 @@ public class DownloadActivity extends AppActivity implements APIRequestListener,
             binding.recyclerTags.setAdapter(coursesAdapter);
         }
 
+    }
+
+    private void openDownloadedCourse(CourseInstallViewAdapter course) {
+        Intent i = new Intent(this, CourseIndexActivity.class);
+        Bundle tb = new Bundle();
+        tb.putSerializable(Course.TAG, course);
+        i.putExtras(tb);
+        startActivity(i);
     }
 
 
@@ -284,6 +295,7 @@ public class DownloadActivity extends AppActivity implements APIRequestListener,
     @SuppressWarnings("unchecked")
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
+
         super.onRestoreInstanceState(savedInstanceState);
 
         mode = savedInstanceState.getInt("mode");
