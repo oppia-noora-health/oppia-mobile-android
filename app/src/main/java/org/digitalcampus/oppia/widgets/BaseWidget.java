@@ -168,8 +168,7 @@ public abstract class BaseWidget extends Fragment {
         return this.spentTime;
     }
 
-    protected void startMediaPlayerWithFile(String mediaFileName){
-
+    protected boolean startMediaPlayerWithFile(String mediaFileName){
         String filename = mediaFileName;
         Context ctx = getActivity();
         // check media file exists
@@ -183,7 +182,7 @@ public abstract class BaseWidget extends Fragment {
                 Media m =  activity.getMedia(mediaFileName);
                 String digest = (m == null) ? "" : m.getDigest();
                 new Tracker(ctx).saveMissingMediaTracker(course.getCourseId(), digest, mediaFileName);
-                return;
+                return false;
             }
         }
 
@@ -192,7 +191,7 @@ public abstract class BaseWidget extends Fragment {
             Toast.makeText(ctx,
                     getString(R.string.error_media_unsupported, mediaFileName),
                     Toast.LENGTH_LONG).show();
-            return;
+            return false;
         }
 
         Intent intent = new Intent(ctx, VideoPlayerActivity.class);
@@ -202,6 +201,7 @@ public abstract class BaseWidget extends Fragment {
         tb.putSerializable(Course.TAG, course);
         intent.putExtras(tb);
         startActivity(intent);
+        return true;
     }
 
 

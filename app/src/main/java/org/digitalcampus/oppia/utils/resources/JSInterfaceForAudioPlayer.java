@@ -1,9 +1,18 @@
 package org.digitalcampus.oppia.utils.resources;
 
 import android.content.Context;
+import android.content.Intent;
 import android.media.MediaPlayer;
+import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.webkit.JavascriptInterface;
+import android.widget.Toast;
+
+import org.digitalcampus.mobile.learning.R;
+import org.digitalcampus.oppia.activity.DownloadMediaActivity;
+import org.digitalcampus.oppia.model.Course;
+import org.digitalcampus.oppia.utils.storage.Storage;
 
 import java.io.File;
 
@@ -18,6 +27,7 @@ public class JSInterfaceForAudioPlayer extends JSInterface {
     private int audioDuration;
     private OnPlayButtonClickListener onPlayButtonClickListener;
     private boolean playing = false;
+    private Course course; // Add course variable
 
     public interface OnPlayButtonClickListener {
         void onPlayButtonClick(boolean playing, int duration);
@@ -28,8 +38,9 @@ public class JSInterfaceForAudioPlayer extends JSInterface {
         this.onPlayButtonClickListener = listener;
     }
 
-    public JSInterfaceForAudioPlayer(Context ctx) {
+    public JSInterfaceForAudioPlayer(Context ctx, Course course) {
         super(ctx);
+        this.course = course;
         loadJSInjectionSourceFile(JS_RESOURCE_FILE);
     }
 
@@ -49,6 +60,15 @@ public class JSInterfaceForAudioPlayer extends JSInterface {
 
     @JavascriptInterface   // must be added for API 17 or higher
     public void onPlayButtonClick(String audioSource) {
+        File audioFile = new File(audioSource);
+
+        // Check if the audio file exists
+        if (!audioFile.exists()) {
+            Toast.makeText(context.getApplicationContext(), "Media file " + audioFile.getName() + " not found",
+                    Toast.LENGTH_LONG).show();
+            showDownloadButton();
+            return;
+        }
 
         // Get duration only once
         if (audioDuration == 0) {
@@ -60,6 +80,26 @@ public class JSInterfaceForAudioPlayer extends JSInterface {
             if (onPlayButtonClickListener != null) {
                 onPlayButtonClickListener.onPlayButtonClick(playing, audioDuration);
             }
+        }
+    }
+
+    // Function to make the download button visible
+    private void showDownloadButton() {
+        if (context instanceof android.app.Activity) {
+            android.app.Activity activity = (android.app.Activity) context;
+            activity.runOnUiThread(() -> {
+                View downloadButton = activity.findViewById(R.id.download_course);
+                if (downloadButton != null) {
+                    downloadButton.setVisibility(View.VISIBLE);
+                    downloadButton.setOnClickListener(v -> {
+                        Intent i = new Intent(context, DownloadMediaActivity.class);
+                        Bundle tb = new Bundle();
+                        tb.putSerializable(DownloadMediaActivity.MISSING_MEDIA_COURSE_FILTER, course);
+                        i.putExtras(tb);
+                        context.startActivity(i);
+                    });
+                }
+            });
         }
     }
 

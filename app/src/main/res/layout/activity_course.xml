@@ -48,6 +48,16 @@
         android:layout_margin="16dp"
         android:theme="@style/PrimaryButton"/>
 
+    <Button
+        android:id="@+id/download_course"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Download"
+        android:visibility="gone"
+        android:layout_gravity="bottom|center"
+        android:layout_margin="16dp"
+        android:theme="@style/PrimaryButton"/>
+
     <ScrollView
         android:id="@+id/unlock_topic_form"
         android:layout_width="match_parent"

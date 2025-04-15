@@ -115,11 +115,12 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
                     currentSectionIndex++;
                 }
             }
-
-            if (currentSectionIndex < sectionsList.size() - 1) {
-                Section nextSection = sectionsList.get(currentSectionIndex + 1);
-                if (section.getActivities().size() == 1 && nextSection != null) {
-                    binding.nextCourse.setVisibility(View.VISIBLE);
+            if (sectionsList != null && currentSectionIndex < sectionsList.size() - 1) {
+                if (currentSectionIndex < sectionsList.size() - 1) {
+                    Section nextSection = sectionsList.get(currentSectionIndex + 1);
+                    if (section.getActivities().size() == 1 && nextSection != null) {
+                        binding.nextCourse.setVisibility(View.VISIBLE);
+                    }
                 }
             }
 

@@ -4,8 +4,8 @@ apply plugin: 'com.android.application'
 apply from: '../jacoco.gradle'
 apply from: '../sonarqube.gradle'
 
-def version_code = 119
-def version_name = "7.4.9-noora.6"
+def version_code = 122
+def version_name = "7.4.10-noora.1"
 
 android {
 

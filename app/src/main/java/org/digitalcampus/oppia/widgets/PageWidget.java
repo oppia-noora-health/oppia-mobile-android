@@ -20,6 +20,7 @@ package org.digitalcampus.oppia.widgets;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -28,6 +29,7 @@ import android.view.ViewGroup;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.text.HtmlCompat;
@@ -37,6 +39,7 @@ import com.google.android.material.snackbar.Snackbar;
 import org.digitalcampus.mobile.learning.BuildConfig;
 import org.digitalcampus.mobile.learning.R;
 import org.digitalcampus.oppia.activity.CourseActivity;
+import org.digitalcampus.oppia.activity.DownloadMediaActivity;
 import org.digitalcampus.oppia.activity.PrefsActivity;
 import org.digitalcampus.oppia.application.App;
 import org.digitalcampus.oppia.application.SessionManager;
@@ -56,6 +59,7 @@ import org.digitalcampus.oppia.utils.resources.JSInterfaceForWebViewScrolling;
 import org.digitalcampus.oppia.utils.storage.FileUtils;
 import org.digitalcampus.oppia.utils.storage.Storage;
 import org.digitalcampus.oppia.utils.ui.ExtendedWebView;
+import org.digitalcampus.oppia.activity.DownloadMediaActivity;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -128,6 +132,21 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 		webview.getSettings().setDefaultFontSize(defaultFontSize);
 		webview.getSettings().setAllowFileAccess(true);
 
+		// Reference the existing button from XML
+		View downloadButton = getActivity().findViewById(R.id.download_course);
+
+		// Ensure the button is initially hidden (if not set in XML)
+		downloadButton.setVisibility(View.GONE);
+
+		// Set click listener for downloading media
+		downloadButton.setOnClickListener(v -> {
+			Intent i = new Intent(getContext(), DownloadMediaActivity.class);
+			Bundle tb = new Bundle();
+			tb.putSerializable(DownloadMediaActivity.MISSING_MEDIA_COURSE_FILTER, course);
+			i.putExtras(tb);
+			getContext().startActivity(i);
+		});
+
 		try {
 			String contents = FileUtils.readFile(url);
 			pageResources = ExternalResourceOpener.getResourcesFromContent(contents);
@@ -148,7 +167,7 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 			jsInterfaces.add(inputJSInterface);
 			webview.addJavascriptInterface(inputJSInterface, inputJSInterface.getInterfaceExposedName());
 
-			JSInterfaceForAudioPlayer audioPlayerJSInterface = new JSInterfaceForAudioPlayer(getContext());
+			JSInterfaceForAudioPlayer audioPlayerJSInterface = new JSInterfaceForAudioPlayer(getContext(), course);
 			audioPlayerJSInterface.setOnPlayButtonClickListener(new JSInterfaceForAudioPlayer.OnPlayButtonClickListener() {
 				@Override
 				public void onPlayButtonClick(boolean playing, int duration) {
@@ -201,7 +220,10 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 					// extract video name from url
 					int startPos = url.indexOf(VIDEO_SUBPATH) + VIDEO_SUBPATH.length();
 					String mediaFileName = url.substring(startPos);
-					PageWidget.super.startMediaPlayerWithFile(mediaFileName);
+					boolean isMediaFound = PageWidget.super.startMediaPlayerWithFile(mediaFileName);
+					if (!isMediaFound) {
+						showDownloadButton();
+					}
 					return true;
 
 				} else if (url.contains(RESOURCE_SUBPATH)){
@@ -209,9 +231,14 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 				}
 				return false;
 			}
+
+			private void showDownloadButton() {
+				if (downloadButton != null) {
+					downloadButton.setVisibility(View.VISIBLE);
+				}
+			}
 		});
 	}
-
 	@Override
 	public void setIsBaseline(boolean isBaseline) {
 		this.isBaseline = isBaseline;
