@@ -253,9 +253,12 @@ public class DownloadActivity extends AppActivity implements APIRequestListener,
     }
 
     private void openDownloadedCourse(CourseInstallViewAdapter course) {
+        App app = (App) this.getApplicationContext();
+        User currentUser = app.getComponent().getUser();
+        Course localCourse = coursesRepository.getCourseByShortname(this, course.getShortname(), currentUser.getUserId());
         Intent i = new Intent(this, CourseIndexActivity.class);
         Bundle tb = new Bundle();
-        tb.putSerializable(Course.TAG, course);
+        tb.putSerializable(Course.TAG, localCourse);
         i.putExtras(tb);
         startActivity(i);
     }
