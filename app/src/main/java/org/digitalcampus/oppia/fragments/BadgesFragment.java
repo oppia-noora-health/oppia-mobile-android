@@ -173,9 +173,9 @@ public class BadgesFragment extends AppFragment implements APIRequestListener, D
 		boolean hasPermissions = PermissionsManager.checkPermissionsAndInform(getActivity(),
 				PermissionsManager.STORAGE_PERMISSIONS, binding.permissionsExplanation);
 
-		if (hasPermissions) {
+		//if (hasPermissions) {
 			downloadCertificate(badge);
-		}
+		//}
 	}
 
 	private void downloadCertificate(Badge badge) {

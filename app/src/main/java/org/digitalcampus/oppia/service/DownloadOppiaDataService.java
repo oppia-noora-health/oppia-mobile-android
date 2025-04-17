@@ -10,7 +10,9 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
+import android.util.Log;
 import android.widget.Toast;
 
 import org.digitalcampus.mobile.learning.R;
@@ -38,6 +40,7 @@ public class DownloadOppiaDataService {
     private DownloadManager downloadManager;
     private DownloadOppiaDataListener listener;
     private boolean showDialog;
+    private long lastDownloadId = -1; // Track the download id
 
     public DownloadOppiaDataService(Context context) {
         this.context = context;
@@ -58,13 +61,13 @@ public class DownloadOppiaDataService {
      */
     public void downloadOppiaData(String path, @Nullable String filename) {
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            int permitted = context.checkSelfPermission( Manifest.permission.WRITE_EXTERNAL_STORAGE );
-            if( permitted != PackageManager.PERMISSION_GRANTED ) {
-                Toast.makeText(context, R.string.storage_permission_not_granted, Toast.LENGTH_SHORT).show();
-                return;
-            }
-        }
+//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+//            int permitted = context.checkSelfPermission( Manifest.permission.WRITE_EXTERNAL_STORAGE );
+//            if( permitted != PackageManager.PERMISSION_GRANTED ) {
+//                Toast.makeText(context, R.string.storage_permission_not_granted, Toast.LENGTH_SHORT).show();
+//                return;
+//            }
+//        }
 
         DbHelper db = DbHelper.getInstance(context);
         User user;
@@ -89,9 +92,11 @@ public class DownloadOppiaDataService {
 
         String filenameUser = user.getUsername() + "-" + filename;
         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filenameUser);
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE); // to notify when download is complete
+        //request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE); // to notify when download is complete
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
         downloadManager = (DownloadManager) context.getSystemService(DOWNLOAD_SERVICE);
-        downloadManager.enqueue(request);
+        //downloadManager.enqueue(request);
+        lastDownloadId = downloadManager.enqueue(request);
     }
 
     private final BroadcastReceiver onDownloadComplete = new BroadcastReceiver() {
@@ -100,35 +105,80 @@ public class DownloadOppiaDataService {
 
             //Fetching the download id received with the broadcast
             long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-            Cursor c = downloadManager.query(new DownloadManager.Query()
-                    .setFilterById(id));
+            Log.i("DownloadDebug", "Broadcast id: " + id + " | Expected: " + lastDownloadId);
+            // Only handle the download we initiated
+            if (id != lastDownloadId) {
+                return;
+            }
+            Cursor c = null;
 
-            c.moveToFirst();
-
-            int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
-
-            if (status == DownloadManager.STATUS_SUCCESSFUL) {
-                if (listener != null) {
-                    listener.onDownloadFinished(true, null);
+            try {
+                c = downloadManager.query(new DownloadManager.Query().setFilterById(id));
+                if (c != null && c.moveToFirst()) {
+                    int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
+                    if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                        if (listener != null) {
+                            listener.onDownloadFinished(true, null);
+                        }
+                        if (showDialog) {
+                            showDownloadSuccessDialog();
+                        }
+                    } else if (status == DownloadManager.STATUS_FAILED) {
+                        downloadManager.remove(id);
+                        String reason = c.getString(c.getColumnIndex(DownloadManager.COLUMN_REASON));
+                        if (listener != null) {
+                            listener.onDownloadFinished(false, reason);
+                        }
+                    }
                 }
-                if (showDialog) {
-                    showDownloadSuccessDialog();
+            } finally {
+                if (c != null) {
+                    c.close();
                 }
             }
-            else if (status == DownloadManager.STATUS_FAILED) {
-                downloadManager.remove(id);
-                String reason = c.getString(c.getColumnIndex(DownloadManager.COLUMN_REASON));
-                if (listener != null) {
-                    listener.onDownloadFinished(false, reason);
-                }
-            }
+
+//            Cursor c = downloadManager.query(new DownloadManager.Query()
+//                    .setFilterById(id));
+//
+//            c.moveToFirst();
+//
+//            int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
+//
+//            if (status == DownloadManager.STATUS_SUCCESSFUL) {
+//                if (listener != null) {
+//                    listener.onDownloadFinished(true, null);
+//                }
+//                if (showDialog) {
+//                    showDownloadSuccessDialog();
+//                }
+//            }
+//            else if (status == DownloadManager.STATUS_FAILED) {
+//                downloadManager.remove(id);
+//                String reason = c.getString(c.getColumnIndex(DownloadManager.COLUMN_REASON));
+//                if (listener != null) {
+//                    listener.onDownloadFinished(false, reason);
+//                }
+//            }
         }
 
         private void showDownloadSuccessDialog() {
             new AlertDialog.Builder(context)
                     .setTitle(R.string.download_complete)
                     .setMessage(R.string.user_data_download_success)
-                    .setPositiveButton(R.string.open_download_folder, (dialog, which) -> context.startActivity(new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)))
+//                    .setPositiveButton(R.string.open_download_folder, (dialog, which) ->
+//                            context.startActivity(new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)))
+                    .setPositiveButton(R.string.open_download_folder, (dialog, which) -> {
+                        Uri fileUri = downloadManager.getUriForDownloadedFile(lastDownloadId);
+                        if (fileUri != null) {
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.setDataAndType(fileUri, "application/pdf");
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            context.startActivity(intent);
+                        } else {
+                            Toast.makeText(context, "File not found", Toast.LENGTH_SHORT).show();
+                        }
+                    })
                     .setNeutralButton(R.string.back, null)
                     .show();
         }
@@ -136,7 +186,12 @@ public class DownloadOppiaDataService {
 
     public void onResume() {
         IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
-        ContextCompat.registerReceiver(context, onDownloadComplete, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
+        //ContextCompat.registerReceiver(context, onDownloadComplete, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(onDownloadComplete, filter, Context.RECEIVER_EXPORTED);
+        } else {
+            context.registerReceiver(onDownloadComplete, filter);
+        }
     }
 
     public void onPause() {

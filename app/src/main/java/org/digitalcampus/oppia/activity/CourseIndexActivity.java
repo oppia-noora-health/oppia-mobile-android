@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -101,10 +102,12 @@ public class CourseIndexActivity extends AppActivity implements OnSharedPreferen
                 if (baselineCompleted) {
                     course.setMetaPages(parsedCourse.getMetaPages());
                     sections = (ArrayList<Section>) parsedCourse.getSections();
+//                    course.setSections(sections);
                     startCourseActivityByDigest(digest);
                     initializeCourseIndex(false);
                 } else {
                     sections = (ArrayList<Section>) parsedCourse.getSections();
+//                    course.setSections(sections);
                     initializeCourseIndex(false);
                     showBaselineMessage(digest);
                 }
@@ -370,7 +373,7 @@ public class CourseIndexActivity extends AppActivity implements OnSharedPreferen
             tb.putSerializable(Section.TAG, s);
             tb.putSerializable(Course.TAG, course);
             tb.putSerializable(CourseActivity.NUM_ACTIVITY_TAG, position);
-            intent.putExtra("sections", new ArrayList<>(sections));
+            //intent.putExtra("sections", new ArrayList<>(sections));
             intent.putExtras(tb);
             startActivity(intent);
         }
@@ -421,6 +424,7 @@ public class CourseIndexActivity extends AppActivity implements OnSharedPreferen
         course.setMedia(parsedCourse.getMedia());
         course.setGamificationEvents(parsedCourse.getGamification());
         sections = (ArrayList<Section>) parsedCourse.getSections();
+//        course.setSections(sections);
 
         boolean baselineCompleted = isBaselineCompleted();
         if (!baselineCompleted) {
