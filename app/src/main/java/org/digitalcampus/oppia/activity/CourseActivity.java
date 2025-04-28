@@ -43,7 +43,13 @@ import org.digitalcampus.mobile.learning.databinding.ActivityCourseBinding;
 import org.digitalcampus.oppia.adapter.ActivityPagerAdapter;
 import org.digitalcampus.oppia.application.SessionManager;
 import org.digitalcampus.oppia.database.DbHelper;
+import org.digitalcampus.oppia.holder.ActivityHolder;
+import org.digitalcampus.oppia.holder.CompleteCourseHolder;
+import org.digitalcampus.oppia.holder.CourseHolder;
+import org.digitalcampus.oppia.holder.SectionHolder;
 import org.digitalcampus.oppia.model.Activity;
+import org.digitalcampus.oppia.model.CompleteCourse;
+import org.digitalcampus.oppia.model.CompleteCourseProvider;
 import org.digitalcampus.oppia.model.Course;
 import org.digitalcampus.oppia.model.Lang;
 import org.digitalcampus.oppia.model.MultiLangInfoModel;
@@ -63,6 +69,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+import javax.inject.Inject;
+
 public class CourseActivity extends AppActivity implements OnInitListener, TabLayout.OnTabSelectedListener {
 
     public static final String BASELINE_TAG = "BASELINE";
@@ -71,8 +79,6 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
 
     private Section section;
     private Course course;
-
-//    private ArrayList<Section> sectionsList;
 
     private int currentActivityNo = 0;
 
@@ -99,12 +105,25 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
 
         Bundle bundle = this.getIntent().getExtras();
         if (bundle != null) {
-            section = (Section) bundle.getSerializable(Section.TAG);
-            course = (Course) bundle.getSerializable(Course.TAG);
+//            section = (Section) bundle.getSerializable(Section.TAG);
+//            course = (Course) bundle.getSerializable(Course.TAG);
 
-//            // Retrieve the
+            course = CourseHolder.getCourse();
+            if (course == null) {
+                // fallback if needed (not mandatory unless you handle killed app)
+                Toast.makeText(this, "Course data missing", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
+            section = SectionHolder.getSection();
+            if (section == null) {
+                // fallback if needed (not mandatory unless you handle killed app)
+                Toast.makeText(this, "Section data missing", Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
+
 //            sectionsList = (ArrayList<Section>) getIntent().getSerializableExtra("sections");
-//            // Check if nextSection exists
 //            int currentSectionIndex = 0;
 //            if (sectionsList != null) {
 //                for (Section sec : sectionsList) {
@@ -123,7 +142,6 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
 //                    }
 //                }
 //            }
-//            List<Section> sections = course.getSections();
 
             activities = section.getActivities();
             currentActivityNo = bundle.getInt(NUM_ACTIVITY_TAG);
@@ -416,6 +434,7 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
             return;
         }
         binding.activityWidgetPager.setCurrentItem(currentActivityNo);
+        showNextSectionButtonIfNeeded();
     }
 
     private Activity determineActivityType(int i, List<Fragment> fragments) {
@@ -462,9 +481,64 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
         });
     }
 
+    private void showNextSectionButtonIfNeeded() {
+        int totalTabs = binding.tabsToolbar.getTabCount();
+        int currentTab = binding.activityWidgetPager.getCurrentItem();
+
+        if (currentTab == totalTabs - 1) {
+            // Last activity in section
+            binding.nextCourse.setVisibility(View.VISIBLE);
+            binding.nextCourse.setOnClickListener(view -> moveToNextSection());
+        } else {
+            binding.nextCourse.setVisibility(View.GONE);
+        }
+    }
+
+    private void moveToNextSection() {
+        CompleteCourse completeCourse = CompleteCourseHolder.getCompleteCourse();
+        if (completeCourse == null) {
+            Toast.makeText(this, "Course data missing", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        List<Section> sections = completeCourse.getSections();
+        int currentSectionIndex = -1;
+        for (int i = 0; i < sections.size(); i++) {
+            if (sections.get(i).getOrder() == section.getOrder()) {
+                currentSectionIndex = i;
+                break;
+            }
+        }
+
+        if (currentSectionIndex >= 0 && currentSectionIndex < sections.size() - 1) {
+            Section nextSection = sections.get(currentSectionIndex + 1);
+
+            // Set new Section in SectionHolder
+            SectionHolder.setSection(nextSection);
+            // Set Course again (course object stays same)
+            CourseHolder.setCourse(course);
+
+            // 🛑 Important: Clear ActivityHolder because activities will reload for new section
+            ActivityHolder.clear();
+
+            Intent intent = new Intent(this, CourseActivity.class);
+            intent.putExtra(NUM_ACTIVITY_TAG, 0); // Start at first activity
+            startActivity(intent);
+            finish();
+        } else {
+            Toast.makeText(this, "You have completed all sections!", Toast.LENGTH_SHORT).show();
+            finish();
+        }
+    }
+
+
+
+
     @Override
     public void onTabSelected(TabLayout.Tab tab) {
         int tabSelected = tab.getPosition();
+
 //        Activity selectedActivity = activities.get(tabSelected);
 //
 //        // Check if the selected activity is a quiz
@@ -497,6 +571,7 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
             };
             new Handler().post(setPreviousTab);
         }
+        showNextSectionButtonIfNeeded();
     }
 
     @Override
@@ -507,6 +582,7 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
     @Override
     public void onTabReselected(TabLayout.Tab tab) {
         int tabSelected = tab.getPosition();
+
 //        Activity selectedActivity = activities.get(tabSelected);
 //
 //        // Check if the selected activity is a quiz
@@ -520,6 +596,7 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
 //                binding.nextCourse.setVisibility(View.GONE);
 //            }
 //        }
+
         Log.d(TAG, "Tab selected " + tabSelected + " current act " + currentActivityNo);
 
         BaseWidget currentWidget = (BaseWidget) apAdapter.getItem(currentActivityNo);

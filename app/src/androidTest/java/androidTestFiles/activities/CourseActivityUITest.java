@@ -11,6 +11,7 @@ import org.digitalcampus.oppia.activity.CourseActivity;
 import org.digitalcampus.oppia.activity.DeviceListActivity;
 import org.digitalcampus.oppia.activity.PrefsActivity;
 import org.digitalcampus.oppia.model.Activity;
+import org.digitalcampus.oppia.model.CompleteCourse;
 import org.digitalcampus.oppia.model.Course;
 import org.digitalcampus.oppia.model.Lang;
 import org.digitalcampus.oppia.model.Section;
@@ -111,6 +112,7 @@ public class CourseActivityUITest extends DaggerInjectMockUITest {
 
         return s;
     }
+
 
     private Intent getIntentParams(Course course, Section s, int position, boolean isBaseline) {
         Intent i = new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(), CourseActivity.class);

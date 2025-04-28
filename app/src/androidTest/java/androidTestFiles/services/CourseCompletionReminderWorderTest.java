@@ -165,6 +165,10 @@ public class CourseCompletionReminderWorderTest extends NotificationsUiTest {
         } else {
             Assert.assertNull(device.findObject(By.text(context.getString(R.string.courses_reminder_notif_title))));
         }
+
+        // Close notification drawer
+        device.pressBack();  // or use device.pressHome() if needed
+        device.waitForIdle();
     }
 
     private void setCompletedCourses(boolean completed) {

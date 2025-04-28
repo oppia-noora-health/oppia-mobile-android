@@ -40,6 +40,9 @@ import androidx.work.WorkManager;
 import org.digitalcampus.mobile.learning.R;
 import org.digitalcampus.mobile.learning.databinding.ActivityCourseIndexBinding;
 import org.digitalcampus.oppia.adapter.CourseIndexRecyclerViewAdapter;
+import org.digitalcampus.oppia.holder.CompleteCourseHolder;
+import org.digitalcampus.oppia.holder.CourseHolder;
+import org.digitalcampus.oppia.holder.SectionHolder;
 import org.digitalcampus.oppia.model.Activity;
 import org.digitalcampus.oppia.model.CompleteCourse;
 import org.digitalcampus.oppia.model.CompleteCourseProvider;
@@ -102,12 +105,10 @@ public class CourseIndexActivity extends AppActivity implements OnSharedPreferen
                 if (baselineCompleted) {
                     course.setMetaPages(parsedCourse.getMetaPages());
                     sections = (ArrayList<Section>) parsedCourse.getSections();
-//                    course.setSections(sections);
                     startCourseActivityByDigest(digest);
                     initializeCourseIndex(false);
                 } else {
                     sections = (ArrayList<Section>) parsedCourse.getSections();
-//                    course.setSections(sections);
                     initializeCourseIndex(false);
                     showBaselineMessage(digest);
                 }
@@ -368,12 +369,13 @@ public class CourseIndexActivity extends AppActivity implements OnSharedPreferen
                 && (!previousActivitiesCompleted)) {
             UIUtils.showAlert(this, R.string.sequencing_dialog_title, R.string.sequencing_section_message);
         } else {
+            CourseHolder.setCourse(course);
+            SectionHolder.setSection(s);
             Intent intent = new Intent(this, CourseActivity.class);
             Bundle tb = new Bundle();
-            tb.putSerializable(Section.TAG, s);
-            tb.putSerializable(Course.TAG, course);
+            //tb.putSerializable(Section.TAG, s);
+            //tb.putSerializable(Course.TAG, course);
             tb.putSerializable(CourseActivity.NUM_ACTIVITY_TAG, position);
-            //intent.putExtra("sections", new ArrayList<>(sections));
             intent.putExtras(tb);
             startActivity(intent);
         }
@@ -419,12 +421,12 @@ public class CourseIndexActivity extends AppActivity implements OnSharedPreferen
     @Override
     public void onParseComplete(CompleteCourse parsed) {
         binding.loadingCourse.setVisibility(View.GONE);
+        CompleteCourseHolder.setCompleteCourse(parsed);
         parsedCourse = parsed;
         course.setMetaPages(parsedCourse.getMetaPages());
         course.setMedia(parsedCourse.getMedia());
         course.setGamificationEvents(parsedCourse.getGamification());
         sections = (ArrayList<Section>) parsedCourse.getSections();
-//        course.setSections(sections);
 
         boolean baselineCompleted = isBaselineCompleted();
         if (!baselineCompleted) {

@@ -45,7 +45,11 @@ import org.digitalcampus.oppia.application.App;
 import org.digitalcampus.oppia.application.SessionManager;
 import org.digitalcampus.oppia.database.DbHelper;
 import org.digitalcampus.oppia.gamification.GamificationServiceDelegate;
+import org.digitalcampus.oppia.holder.ActivityHolder;
+import org.digitalcampus.oppia.holder.CompleteCourseHolder;
+import org.digitalcampus.oppia.holder.CourseHolder;
 import org.digitalcampus.oppia.model.Activity;
+import org.digitalcampus.oppia.model.CompleteCourse;
 import org.digitalcampus.oppia.model.Course;
 import org.digitalcampus.oppia.model.Media;
 import org.digitalcampus.oppia.utils.TextUtilsJava;
@@ -87,8 +91,10 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 	public static PageWidget newInstance(Activity activity, Course course, boolean isBaseline) {
 		PageWidget myFragment = new PageWidget();
 		Bundle args = new Bundle();
-		args.putSerializable(Activity.TAG, activity);
-		args.putSerializable(Course.TAG, course);
+//		args.putSerializable(Activity.TAG, activity);
+//		args.putSerializable(Course.TAG, course);
+		args.putString("activityDigest", activity.getDigest());
+		CourseHolder.setCourse(course);
 		args.putBoolean(CourseActivity.BASELINE_TAG, isBaseline);
 		myFragment.setArguments(args);
 
@@ -106,8 +112,22 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 		View vv = inflater.inflate(R.layout.fragment_webview, container, false);
 
 		activity = (Activity) getArguments().getSerializable(Activity.TAG);
-		course = (Course) getArguments().getSerializable(Course.TAG);
+//		course = (Course) getArguments().getSerializable(Course.TAG);
+		course = CourseHolder.getCourse();
 		isBaseline = getArguments().getBoolean(CourseActivity.BASELINE_TAG);
+		String digest = getArguments().getString("activityDigest");
+		if (digest != null) {
+			CompleteCourse completeCourse = CompleteCourseHolder.getCompleteCourse();
+			if (completeCourse != null) {
+				activity = completeCourse.getActivityByDigest(digest);
+			}
+		}
+
+		if (activity == null || course == null) {
+			Toast.makeText(getContext(), "Missing activity or course data", Toast.LENGTH_SHORT).show();
+			requireActivity().finish();
+			return null;
+		}
 		vv.setId(activity.getActId());
 		if ((savedInstanceState != null) && (savedInstanceState.getSerializable(BaseWidget.WIDGET_CONFIG) != null)){
 			setWidgetConfig((HashMap<String, Object>) savedInstanceState.getSerializable(BaseWidget.WIDGET_CONFIG));
@@ -393,5 +413,12 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 		if (!inlineInput.contains(input)){
 			inlineInput.add(input);
 		}
+	}
+
+	@Override
+	public void onDestroyView() {
+		super.onDestroyView();
+
+		ActivityHolder.clear();
 	}
 }

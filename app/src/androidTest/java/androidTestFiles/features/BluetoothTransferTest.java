@@ -48,6 +48,8 @@ public class BluetoothTransferTest extends NotificationsUiTest {
         device.openNotification();
         device.wait(Until.hasObject(By.text(context.getString(stringId))), 1000);
         Assert.assertNotNull(device.findObject(By.text(context.getString(stringId))));
+        device.pressBack();
+        device.waitForIdle();
     }
 
     @Test

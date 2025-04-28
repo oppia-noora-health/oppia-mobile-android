@@ -121,7 +121,9 @@ public class CoursesChecksWorkerTest extends NotificationsUiTest {
         device.openNotification();
         device.wait(Until.hasObject(By.text(context.getString(R.string.notification_course_download_title))), 1000);
         Assert.assertNotNull(device.findObject(By.text(context.getString(R.string.notification_course_download_title))));
-
+        // Close notification drawer
+        device.pressBack();  // or use device.pressHome() if needed
+        device.waitForIdle();
     }
 
 
@@ -138,7 +140,9 @@ public class CoursesChecksWorkerTest extends NotificationsUiTest {
         device.openNotification();
         device.wait(Until.hasObject(By.text(context.getString(R.string.notification_course_download_title))), 1000);
         Assert.assertNull(device.findObject(By.text(context.getString(R.string.notification_course_download_title))));
-
+        // Close notification drawer
+        device.pressBack();  // or use device.pressHome() if needed
+        device.waitForIdle();
     }
 
 }
