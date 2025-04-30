@@ -77,6 +77,7 @@ import java.util.List;
 public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.OnInputEnteredListener {
 
 	public static final String TAG = PageWidget.class.getSimpleName();
+	private static final int REQUEST_CODE_DOWNLOAD_MEDIA = 1001;
 
 	private static final String VIDEO_SUBPATH = "/video/";
 	private static final String RESOURCE_SUBPATH = "/resources/";
@@ -153,19 +154,19 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 		webview.getSettings().setAllowFileAccess(true);
 
 		// Reference the existing button from XML
-		View downloadButton = getActivity().findViewById(R.id.download_course);
+//		View downloadButton = getActivity().findViewById(R.id.download_course);
 
 		// Ensure the button is initially hidden (if not set in XML)
-		downloadButton.setVisibility(View.GONE);
+//		downloadButton.setVisibility(View.GONE);
 
 		// Set click listener for downloading media
-		downloadButton.setOnClickListener(v -> {
-			Intent i = new Intent(getContext(), DownloadMediaActivity.class);
-			Bundle tb = new Bundle();
-			tb.putSerializable(DownloadMediaActivity.MISSING_MEDIA_COURSE_FILTER, course);
-			i.putExtras(tb);
-			getContext().startActivity(i);
-		});
+//		downloadButton.setOnClickListener(v -> {
+//			Intent i = new Intent(getContext(), DownloadMediaActivity.class);
+//			Bundle tb = new Bundle();
+//			tb.putSerializable(DownloadMediaActivity.MISSING_MEDIA_COURSE_FILTER, course);
+//			i.putExtras(tb);
+//			getContext().startActivity(i);
+//		});
 
 		try {
 			String contents = FileUtils.readFile(url);
@@ -240,9 +241,12 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 					// extract video name from url
 					int startPos = url.indexOf(VIDEO_SUBPATH) + VIDEO_SUBPATH.length();
 					String mediaFileName = url.substring(startPos);
+//					PageWidget.super.startMediaPlayerWithFile(mediaFileName);
 					boolean isMediaFound = PageWidget.super.startMediaPlayerWithFile(mediaFileName);
+
+                    // 🚀 If media is missing, go to download page
 					if (!isMediaFound) {
-						showDownloadButton();
+						openDownloadMediaActivity();
 					}
 					return true;
 
@@ -252,13 +256,65 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 				return false;
 			}
 
-			private void showDownloadButton() {
-				if (downloadButton != null) {
-					downloadButton.setVisibility(View.VISIBLE);
-				}
-			}
+//			private void showDownloadButton() {
+//				if (downloadButton != null) {
+//					downloadButton.setVisibility(View.VISIBLE);
+//				}
+//			}
 		});
 	}
+
+//	private void openDownloadMediaActivity() {
+//		if (getContext() == null || course == null) {
+//			Toast.makeText(getContext(), "Unable to open download page", Toast.LENGTH_SHORT).show();
+//			return;
+//		}
+//
+//		Intent intent = new Intent(getContext(), DownloadMediaActivity.class);
+//		Bundle bundle = new Bundle();
+//		bundle.putSerializable(DownloadMediaActivity.MISSING_MEDIA_COURSE_FILTER, course);
+//		intent.putExtras(bundle);
+//		getContext().startActivity(intent);
+//	}
+
+	private void openDownloadMediaActivity() {
+		if (getContext() == null || course == null) {
+			Toast.makeText(getContext(), "Unable to open download page", Toast.LENGTH_SHORT).show();
+			return;
+		}
+
+		Intent intent = new Intent(getContext(), DownloadMediaActivity.class);
+		Bundle bundle = new Bundle();
+		bundle.putSerializable(DownloadMediaActivity.MISSING_MEDIA_COURSE_FILTER, course);
+		intent.putExtras(bundle);
+
+		// 🛑 Use startActivityForResult instead of startActivity
+		startActivityForResult(intent, REQUEST_CODE_DOWNLOAD_MEDIA);
+	}
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+
+		if (requestCode == REQUEST_CODE_DOWNLOAD_MEDIA) {
+			// 🚀 After download screen, reload the WebView
+			reloadWebView();
+		}
+	}
+
+	private void reloadWebView() {
+		if (webview != null) {
+			String url = course.getLocation() + activity.getLocation(prefLang);
+			try {
+				String contents = FileUtils.readFile(url);
+				webview.loadDataWithBaseURL("file://" + course.getLocation() + File.separator, contents, "text/html", "utf-8", null);
+			} catch (IOException e) {
+				Log.e(TAG, "Failed to reload WebView content", e);
+			}
+		}
+	}
+
+
 	@Override
 	public void setIsBaseline(boolean isBaseline) {
 		this.isBaseline = isBaseline;
