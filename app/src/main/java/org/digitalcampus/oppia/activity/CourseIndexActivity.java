@@ -344,15 +344,17 @@ public class CourseIndexActivity extends AppActivity implements OnSharedPreferen
                 (dialog, which) -> {
                     //We set the digest to be able to jump to this activity after passing the baseline
                     digestJumpTo = digest;
+                    CourseHolder.setCourse(course);
 
                     Intent intent = new Intent(CourseIndexActivity.this, CourseActivity.class);
                     Bundle tb = new Bundle();
                     Section section = new Section();
                     section.addActivity(getBaselineActivity());
-                    tb.putSerializable(Section.TAG, section);
+//                    tb.putSerializable(Section.TAG, section);
+                    SectionHolder.setSection(section);
                     tb.putSerializable(CourseActivity.BASELINE_TAG, true);
                     tb.putSerializable(CourseActivity.NUM_ACTIVITY_TAG, 0);
-                    tb.putSerializable(Course.TAG, CourseIndexActivity.this.course);
+//                    tb.putSerializable(Course.TAG, CourseIndexActivity.this.course);
                     intent.putExtras(tb);
                     startActivity(intent);
                 });

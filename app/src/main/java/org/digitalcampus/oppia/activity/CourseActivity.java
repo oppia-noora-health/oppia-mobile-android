@@ -485,10 +485,22 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
         int totalTabs = binding.tabsToolbar.getTabCount();
         int currentTab = binding.activityWidgetPager.getCurrentItem();
 
+//        if (currentTab == totalTabs - 1) {
+//            // Last activity in section
+//            binding.nextCourse.setVisibility(View.VISIBLE);
+//            binding.nextCourse.setOnClickListener(view -> moveToNextSection());
+//        } else {
+//            binding.nextCourse.setVisibility(View.GONE);
+//        }
         if (currentTab == totalTabs - 1) {
             // Last activity in section
-            binding.nextCourse.setVisibility(View.VISIBLE);
-            binding.nextCourse.setOnClickListener(view -> moveToNextSection());
+            if (isBaseline) {
+                // If it's a pre-test section (baseline), don't show the Next Section button
+                binding.nextCourse.setVisibility(View.GONE);
+            } else {
+                binding.nextCourse.setVisibility(View.VISIBLE);
+                binding.nextCourse.setOnClickListener(view -> moveToNextSection());
+            }
         } else {
             binding.nextCourse.setVisibility(View.GONE);
         }
