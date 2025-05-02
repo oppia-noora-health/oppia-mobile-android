@@ -18,7 +18,9 @@
 package org.digitalcampus.oppia.widgets;
 
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -178,10 +180,10 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 			jsInterfaces.add(backwardsCompatJSInterface);
 			webview.addJavascriptInterface(backwardsCompatJSInterface, backwardsCompatJSInterface.getInterfaceExposedName());
 
-			//We inject the interface to launch intents from the HTML
-//			JSInterfaceForResourceImages imagesJSInterface = new JSInterfaceForResourceImages(getContext(), course.getLocation());
-//			jsInterfaces.add(imagesJSInterface);
-//            webview.addJavascriptInterface(imagesJSInterface, imagesJSInterface.getInterfaceExposedName());
+//			We inject the interface to launch intents from the HTML
+			JSInterfaceForResourceImages imagesJSInterface = new JSInterfaceForResourceImages(getContext(), course.getLocation());
+			jsInterfaces.add(imagesJSInterface);
+            webview.addJavascriptInterface(imagesJSInterface, imagesJSInterface.getInterfaceExposedName());
 
 			JSInterfaceForInlineInput inputJSInterface = new JSInterfaceForInlineInput(getContext());
 			inputJSInterface.setOnInputEnteredListener(this);
@@ -313,6 +315,23 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 			}
 		}
 	}
+
+//	@Override
+//	public void onResume() {
+//		super.onResume();
+//
+//		SharedPreferences prefs = getContext().getSharedPreferences("oppia", Context.MODE_PRIVATE);
+//		String retryAudio = prefs.getString(JSInterfaceForAudioPlayer.PREF_RETRY_AUDIO, null);
+//
+//		if (retryAudio != null) {
+//			// 🔁 Re-run the play command from JS after download
+//			webview.evaluateJavascript("retryAudio('" + retryAudio + "')", null);
+//
+//			// 🧹 Clear the retry flag
+//			prefs.edit().remove(JSInterfaceForAudioPlayer.PREF_RETRY_AUDIO).apply();
+//		}
+//	}
+
 
 
 	@Override

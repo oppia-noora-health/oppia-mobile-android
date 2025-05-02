@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import org.digitalcampus.mobile.learning.R;
 import org.digitalcampus.oppia.activity.DownloadMediaActivity;
+import org.digitalcampus.oppia.holder.CourseHolder;
 import org.digitalcampus.oppia.model.Course;
 import org.digitalcampus.oppia.utils.storage.Storage;
 
@@ -23,6 +24,7 @@ public class JSInterfaceForAudioPlayer extends JSInterface {
     //Name of the JS interface to add to the webView
     public static final String INTERFACE_EXPOSED_NAME = "OppiaAndroid_AudioPlayer";
     private static final String JS_RESOURCE_FILE = "observe_audio_player.js";
+    public static final String PREF_RETRY_AUDIO = "pref_retry_audio";
 
     private int audioDuration;
     private OnPlayButtonClickListener onPlayButtonClickListener;
@@ -62,11 +64,14 @@ public class JSInterfaceForAudioPlayer extends JSInterface {
     public void onPlayButtonClick(String audioSource) {
         File audioFile = new File(audioSource);
 
-        // Check if the audio file exists
+        // ✅ Check if file exists before proceeding
         if (!audioFile.exists()) {
-            Toast.makeText(context.getApplicationContext(), "Media file " + audioFile.getName() + " not found",
-                    Toast.LENGTH_LONG).show();
-            showDownloadButton();
+//            Toast.makeText(context, context.getString(R.string.media_missing_redirect), Toast.LENGTH_SHORT).show();
+
+            // 🔁 Redirect to download media page
+            Intent intent = new Intent(context, DownloadMediaActivity.class);
+            intent.putExtra(DownloadMediaActivity.MISSING_MEDIA_COURSE_FILTER, getCourse());
+            context.startActivity(intent);
             return;
         }
 
@@ -83,25 +88,29 @@ public class JSInterfaceForAudioPlayer extends JSInterface {
         }
     }
 
-    // Function to make the download button visible
-    private void showDownloadButton() {
-        if (context instanceof android.app.Activity) {
-            android.app.Activity activity = (android.app.Activity) context;
-            activity.runOnUiThread(() -> {
-                View downloadButton = activity.findViewById(R.id.download_course);
-                if (downloadButton != null) {
-                    downloadButton.setVisibility(View.VISIBLE);
-                    downloadButton.setOnClickListener(v -> {
-                        Intent i = new Intent(context, DownloadMediaActivity.class);
-                        Bundle tb = new Bundle();
-                        tb.putSerializable(DownloadMediaActivity.MISSING_MEDIA_COURSE_FILTER, course);
-                        i.putExtras(tb);
-                        context.startActivity(i);
-                    });
-                }
-            });
-        }
+    private Course getCourse() {
+        return CourseHolder.getCourse(); // Assumes Course is set in CourseHolder, just like PageWidget
     }
+
+    // Function to make the download button visible
+//    private void showDownloadButton() {
+//        if (context instanceof android.app.Activity) {
+//            android.app.Activity activity = (android.app.Activity) context;
+//            activity.runOnUiThread(() -> {
+//                View downloadButton = activity.findViewById(R.id.download_course);
+//                if (downloadButton != null) {
+//                    downloadButton.setVisibility(View.VISIBLE);
+//                    downloadButton.setOnClickListener(v -> {
+//                        Intent i = new Intent(context, DownloadMediaActivity.class);
+//                        Bundle tb = new Bundle();
+//                        tb.putSerializable(DownloadMediaActivity.MISSING_MEDIA_COURSE_FILTER, course);
+//                        i.putExtras(tb);
+//                        context.startActivity(i);
+//                    });
+//                }
+//            });
+//        }
+//    }
 
     private int calculateAudioDuration(String audioSource) {
         MediaPlayer mediaPlayer = new MediaPlayer();
