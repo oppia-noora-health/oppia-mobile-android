@@ -89,7 +89,10 @@ public class ActivitiesFragment extends AppFragment implements TabLayout.OnTabSe
         ActivitiesFragment fragment = new ActivitiesFragment();
         Bundle args = new Bundle();
 //        args.putSerializable(ARG_COURSE, course);
-        args.putInt(ARG_COURSE, course.getCourseId());
+        if(course!=null){
+            args.putInt(ARG_COURSE, course.getCourseId());
+        }
+
         fragment.setArguments(args);
         return fragment;
     }
@@ -110,7 +113,9 @@ public class ActivitiesFragment extends AppFragment implements TabLayout.OnTabSe
         configureChart();
 
 //        course = (Course) getArguments().getSerializable(ARG_COURSE);
-        course = DbHelper.getInstance(getContext()).getCourse(Long.parseLong(ARG_COURSE));
+        if(course!=null) {
+            course = DbHelper.getInstance(getContext()).getCourse(Long.parseLong(ARG_COURSE));
+        }
 
         loadPoints();
 
