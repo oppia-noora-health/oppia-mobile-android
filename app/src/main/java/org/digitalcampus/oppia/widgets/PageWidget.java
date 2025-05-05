@@ -496,4 +496,26 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 
 		ActivityHolder.clear();
 	}
+
+//	@Override
+//	public void onResume() {
+//		super.onResume();
+//		if (webview != null) {
+//			webview.reload(); // Forces it to reload HTML and JS
+//		}
+//	}
+@Override
+public void onResume() {
+	super.onResume();
+	if (webview != null) {
+		webview.reload();  // Force re-evaluation of JS & media source
+	}
+}
+
+
+
+
+
+
+
 }
