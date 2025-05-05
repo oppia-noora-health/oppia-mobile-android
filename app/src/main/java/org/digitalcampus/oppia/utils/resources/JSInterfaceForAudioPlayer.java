@@ -69,8 +69,8 @@ public class JSInterfaceForAudioPlayer extends JSInterface {
         Log.d(TAG, "Audio file exists: " + audioFile.exists());
 
         // ✅ Check if file exists before proceeding
-//        if (!Storage.mediaFileExists(context, Uri.decode(audioFile.getName()))){
-        if (!audioFile.exists()) {
+        if (!Storage.mediaFileExists(context, Uri.decode(audioFile.getName()))){
+//        if (!audioFile.exists()) {
 //            Toast.makeText(context, "Please download audio", Toast.LENGTH_SHORT).show();
 
             // 🔁 Redirect to download media page
