@@ -42,38 +42,6 @@
       "type":"str"
     },
     {
-      "name":"department",
-      "label":"Department",
-      "order":8,
-      "required":false,
-      "helper_text":"",
-      "type":"str"
-    },
-    {
-      "name":"state",
-      "label":"State",
-      "order":8,
-      "required":false,
-      "helper_text":"",
-      "type":"str"
-    },
-    {
-      "name":"district",
-      "label":"District",
-      "order":8,
-      "required":false,
-      "helper_text":"",
-      "type":"str"
-    },
-    {
-      "name":"facility_type",
-      "label":"Facility Type",
-      "order":8,
-      "required":false,
-      "helper_text":"",
-      "type":"str"
-    },
-    {
       "name":"pr1",
       "label":"Profile field 1",
       "order":11,
@@ -98,7 +66,7 @@
       "type":"str"
     }
   ],
-  "required_fields": ["email","phoneno"],
+  "required_fields": ["email"],
   "collections": [
     {
       "collection_name": "genders",
@@ -142,11 +110,7 @@
         "jobtitle",
         "regency",
         "facility",
-        "designation",
-        "department",
-        "facility_type",
-        "state",
-        "district"
+        "designation"
       ]
     }
   ]

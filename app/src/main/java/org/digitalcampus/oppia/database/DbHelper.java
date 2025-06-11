@@ -892,7 +892,8 @@ public class DbHelper extends SQLiteOpenHelper {
         values.put(USER_C_USERNAME, user.getUsername());
         values.put(USER_C_FIRSTNAME, user.getFirstname());
         values.put(USER_C_LASTNAME, user.getLastname());
-        values.put(USER_C_PASSWORDENCRYPTED, user.getPasswordEncrypted());
+//      changed by namratha
+//      values.put(USER_C_PASSWORDENCRYPTED, user.getPasswordEncrypted());
         values.put(USER_C_APIKEY, user.getApiKey());
         values.put(USER_C_POINTS, user.getPoints());
         values.put(USER_C_BADGES, user.getBadges());

@@ -278,7 +278,9 @@
     <string name="error_connection_timeout">Timeout error connecting to server. Please check you have a stable internet connection and try again.</string>
     <string name="error_installing_course">%1$s: failed to install</string>
     <string name="error_latest_already_installed">%1$s: latest version already installed</string>
-    <string name="error_login">Invalid username/password\nPlease try again</string>
+<!--    <string name="error_login">Invalid username/password\nPlease try again</string>-->
+    <!--    changed by namratha-->
+    <string name="error_login">Phone number not found. Please contact your nearest Noora Health team member for Assistance.</string>
     <string name="error_media_app_not_found">You don\'t appear to have a media player installed which supports playing this video.</string>
     <string name="error_no_username">Please enter your username</string>
     <string name="error_processing_response">Error processing response</string>
@@ -686,6 +688,20 @@
     <string name="must_accept_privacy_policy">To continue, you must accept the privacy policy</string>
     <string name="accept_privacy_check">I accept the</string>
     <string name="privacy_policy">Privacy Policy</string>
+
+    <string name="notification_new_badge_title">🎓 New Badge Earned!</string>
+    <plurals name="notification_new_badges_text" formatted="true">
+        <item quantity="one">You\'ve earned a new badge and certificate! Tap to view.</item>
+        <item quantity="other">You\'ve earned %d new badges and certificates! Tap to view.</item>
+    </plurals>
+
+    <!--    changed by namratha-->
+    <string name="error_invalid_otp">Invalid OTP</string>
+    <string name="error_invalid_phone">Invalid Phone Number</string>
+    <string name="title_signup">Sign Up</string>
+    <string name="tab_title_signup">Sign UP</string>
+    <string name="signup_complete">Signup complete</string>
+    <string name="error_signup">Signup failed. Please check your details.</string>
 
 </resources>
 

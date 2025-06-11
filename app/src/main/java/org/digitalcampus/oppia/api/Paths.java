@@ -24,6 +24,9 @@ public class Paths {
     public static final String CHANGE_PASSWORD_PATH = OPPIAMOBILE_API + "password/";
     public static final String USER_COHORTS_PATH = OPPIAMOBILE_API + "cohorts/";
     public static final String USER_PROFILE_PATH = OPPIAMOBILE_API + "profile/";
+    //    changed by namratha
+    public static final String SEND_OTP_PATH = OPPIAMOBILE_API + "sendotp/";
+    public static final String CHANNEL_PATH = OPPIAMOBILE_API + "channel/";
 
     private Paths() {
         throw new IllegalStateException("Utility class");

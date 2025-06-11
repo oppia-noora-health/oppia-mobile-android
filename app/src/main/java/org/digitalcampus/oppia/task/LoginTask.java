@@ -47,6 +47,8 @@ import okhttp3.Response;
 public class LoginTask extends APIRequestTask<User, Object, EntityResult<User>> {
 
     private SubmitEntityListener mStateListener;
+//    changed by namratha
+    private String otpCode;
 
     public LoginTask(Context ctx, ApiEndpoint api) {
         super(ctx, api);
@@ -62,12 +64,17 @@ public class LoginTask extends APIRequestTask<User, Object, EntityResult<User>> 
         if (ConnectionUtils.isNetworkConnected(ctx)) {
             loginRemotely(user, result);
         }
-        else{
-            // Only try to login locally if no connection available
-            loginLocalOfflineUser(user, result);
-        }
+//        changed by namratha
+//        else{
+//            // Only try to login locally if no connection available
+//            loginLocalOfflineUser(user, result);
+//        }
 
         return result;
+    }
+//    changed by namratha
+    public void setOtpCode(String otpCode) {
+        this.otpCode = otpCode;
     }
 
     private void loginLocalOfflineUser(User user, EntityResult<User> result){
@@ -91,22 +98,89 @@ public class LoginTask extends APIRequestTask<User, Object, EntityResult<User>> 
         }
     }
 
-    private void loginRemotely(User user, EntityResult<User> result){
+//    private void loginRemotely(User user, EntityResult<User> result){
+//
+//        User localUser;
+//        try {
+//            localUser = DbHelper.getInstance(ctx).getUser(user.getUsername());
+//        }
+//        catch (UserNotFoundException unfe){
+//            localUser = null;
+//        }
+//
+//        try {
+//            // update progress dialog
+//            publishProgress(ctx.getString(R.string.login_process));
+//            JSONObject json = new JSONObject();
+//            json.put("username", user.getUsername());
+//            json.put("password", user.getPassword());
+//
+//            OkHttpClient client = HTTPClientUtils.getClient(ctx);
+//            Request request = new Request.Builder()
+//                    .url(apiEndpoint.getFullURL(ctx, Paths.LOGIN_PATH))
+//                    .post(RequestBody.create(json.toString(), HTTPClientUtils.MEDIA_TYPE_JSON))
+//                    .build();
+//
+//            Response response = client.newCall(request).execute();
+//            if (response.isSuccessful()) {
+//                JSONObject jsonResp = new JSONObject(response.body().string());
+//                user.updateFromJSON(ctx, jsonResp);
+//                DbHelper.getInstance(ctx).addOrUpdateUser(user);
+//                new MetaDataUtils(ctx).saveMetaData(jsonResp);
+//                result.setSuccess(true);
+//                result.setResultMessage(ctx.getString(R.string.login_complete));
+//
+//                if (localUser != null &&
+//                        localUser.getPasswordEncrypted().equals(user.getPasswordEncrypted())) {
+//                    user.setLocalUser(true);
+//                }
+//
+//            } else {
+//                if (response.code() == 400 || response.code() == 401) {
+//                    result.setSuccess(false);
+//                    result.setResultMessage(ctx.getString(R.string.error_login));
+//                } else {
+//                    result.setSuccess(false);
+//                    result.setResultMessage(ctx.getString(R.string.error_connection));
+//                }
+//            }
+//
+//        } catch (javax.net.ssl.SSLHandshakeException e) {
+//            Log.d(TAG, "SSLHandshakeException: ", e);
+//            result.setSuccess(false);
+//            result.setResultMessage(ctx.getString(R.string.error_connection_ssl));
+//        } catch (UnsupportedEncodingException e) {
+//            result.setSuccess(false);
+//            result.setResultMessage(ctx.getString(R.string.error_connection));
+//        } catch (IOException e) {
+//            result.setSuccess(false);
+//            result.setResultMessage(ctx.getString(R.string.error_connection_required));
+//        } catch (JSONException e) {
+//            Analytics.logException(e);
+//            Log.d(TAG, "JSONException: ", e);
+//            result.setSuccess(false);
+//            result.setResultMessage(ctx.getString(R.string.error_processing_response));
+//        }
+//
+//    }
 
-        User localUser;
-        try {
-            localUser = DbHelper.getInstance(ctx).getUser(user.getUsername());
-        }
-        catch (UserNotFoundException unfe){
-            localUser = null;
-        }
+    private void loginRemotely(User user, EntityResult<User> result){
+        //    changed by namratha
+
+//        User localUser;
+//        try {
+//            localUser = DbHelper.getInstance(ctx).getUser(user.getUsername());
+//        }
+//        catch (UserNotFoundException unfe){
+//            localUser = null;
+//        }
 
         try {
             // update progress dialog
             publishProgress(ctx.getString(R.string.login_process));
             JSONObject json = new JSONObject();
-            json.put("username", user.getUsername());
-            json.put("password", user.getPassword());
+            json.put("phone_number", user.getPhoneNo());
+            json.put("code", otpCode); // use OTP from separate field
 
             OkHttpClient client = HTTPClientUtils.getClient(ctx);
             Request request = new Request.Builder()
@@ -123,10 +197,10 @@ public class LoginTask extends APIRequestTask<User, Object, EntityResult<User>> 
                 result.setSuccess(true);
                 result.setResultMessage(ctx.getString(R.string.login_complete));
 
-                if (localUser != null &&
-                        localUser.getPasswordEncrypted().equals(user.getPasswordEncrypted())) {
-                    user.setLocalUser(true);
-                }
+//                if (localUser != null &&
+//                        localUser.getPasswordEncrypted().equals(user.getPasswordEncrypted())) {
+//                    user.setLocalUser(true);
+//                }
 
             } else {
                 if (response.code() == 400 || response.code() == 401) {

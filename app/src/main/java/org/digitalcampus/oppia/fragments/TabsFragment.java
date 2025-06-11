@@ -41,4 +41,9 @@ public class TabsFragment extends AppFragment {
         apAdapter.updateTabViews(binding.tabs);
     }
 
+    protected com.google.android.material.tabs.TabLayout getTabLayout() {
+        return binding != null ? binding.tabs : null;
+    }
+
+
 }
