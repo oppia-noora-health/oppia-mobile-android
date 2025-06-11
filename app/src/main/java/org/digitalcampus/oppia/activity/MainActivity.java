@@ -24,6 +24,7 @@ import org.digitalcampus.mobile.learning.databinding.DrawerHeaderBinding;
 import org.digitalcampus.mobile.learning.databinding.ViewBadgeBinding;
 import org.digitalcampus.oppia.application.App;
 import org.digitalcampus.oppia.application.PermissionsManager;
+import org.digitalcampus.oppia.fragments.BadgesFragment;
 import org.digitalcampus.oppia.fragments.CoursesListFragment;
 import org.digitalcampus.oppia.fragments.MainPointsFragment;
 import org.digitalcampus.oppia.fragments.MainScorecardFragment;
@@ -81,7 +82,22 @@ public class MainActivity extends AppActivity implements BottomNavigationView.On
 
         bindingHeader.viewProfileOptions.setVisibility(View.GONE);
 
-        getSupportFragmentManager().beginTransaction().replace(R.id.frame_main, getCoursesListFragment()).commit();
+//        getSupportFragmentManager().beginTransaction().replace(R.id.frame_main, getCoursesListFragment()).commit();
+        String navigateTo = getIntent().getStringExtra("navigate_to");
+
+        if ("badges".equals(navigateTo)) {
+            // 1. Set the BottomNav to load MainPointsFragment
+            getIntent().putExtra("open_points_subtab", "badges"); // ✅ Set this FIRST
+
+            binding.navBottomView.setSelectedItemId(R.id.nav_bottom_points); // ✅ Triggers MainPointsFragment
+        } else {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.frame_main, getCoursesListFragment())
+                    .commit();
+        }
+
+        // Clear intent extra to avoid re-trigger on config change
+        getIntent().removeExtra("navigate_to");
 
         saveServerBadgeAwardCriteria();
 
@@ -287,7 +303,10 @@ public class MainActivity extends AppActivity implements BottomNavigationView.On
     }
 
     private void configureSearchButtonVisibility(int itemId) {
-        searchMenuItem.setVisible(itemId == R.id.nav_bottom_home);
+//        searchMenuItem.setVisible(itemId == R.id.nav_bottom_home);
+        if (searchMenuItem != null) {
+            searchMenuItem.setVisible(itemId == R.id.nav_bottom_home);
+        }
     }
 
     @Override

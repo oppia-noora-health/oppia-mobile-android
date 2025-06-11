@@ -35,6 +35,7 @@ import org.digitalcampus.oppia.fragments.prefs.AdvancedPrefsFragment;
 import org.digitalcampus.oppia.fragments.prefs.DisplayPrefsFragment;
 import org.digitalcampus.oppia.fragments.prefs.NotificationsPrefsFragment;
 import org.digitalcampus.oppia.model.User;
+import org.digitalcampus.oppia.service.BadgesChecksWorkerManager;
 import org.digitalcampus.oppia.service.CoursesChecksWorkerManager;
 import org.digitalcampus.oppia.service.CoursesCompletionReminderWorkerManager;
 import org.digitalcampus.oppia.service.UpdateUserProfileWorkerManager;
@@ -94,4 +95,7 @@ public interface AppComponent {
     void inject(DBDataMigration dbDataMigration);
 
     void inject(UpdateUserProfileWorkerManager updateUserProfileWorkerManager);
+
+    void inject(BadgesChecksWorkerManager badgesChecksWorkerManager);
+
 }

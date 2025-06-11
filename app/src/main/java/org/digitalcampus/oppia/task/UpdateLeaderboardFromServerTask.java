@@ -7,9 +7,11 @@ import org.digitalcampus.mobile.learning.R;
 import org.digitalcampus.oppia.analytics.Analytics;
 import org.digitalcampus.oppia.api.ApiEndpoint;
 import org.digitalcampus.oppia.api.Paths;
+import org.digitalcampus.oppia.application.App;
 import org.digitalcampus.oppia.exception.WrongServerException;
 import org.digitalcampus.oppia.gamification.LeaderboardUtils;
 import org.digitalcampus.oppia.listener.SubmitListener;
+import org.digitalcampus.oppia.model.User;
 import org.digitalcampus.oppia.task.result.BasicResult;
 import org.digitalcampus.oppia.utils.HTTPClientUtils;
 import org.json.JSONException;
@@ -31,47 +33,49 @@ public class UpdateLeaderboardFromServerTask extends APIRequestTask<Void, Object
 
     @Override
     protected BasicResult doInBackground(Void... params) {
-
         BasicResult result = new BasicResult();
-        
+
         try {
+            App app = (App) ctx.getApplicationContext();
+            User currentUser = app.getComponent().getUser();
+
+            String leaderboardUrl;
+
+            if (currentUser != null && currentUser.getCohorts() != null && !currentUser.getCohorts().isEmpty()) {
+                String cohortIds = android.text.TextUtils.join(",", currentUser.getCohorts());
+                leaderboardUrl = Paths.OPPIAMOBILE_API + "leaderboardcohort/" + cohortIds + "/";
+                Log.d("Leaderboard", "Using Multi-Cohort Leaderboard URL: " + leaderboardUrl);
+            } else {
+                // No cohort, fallback to application-wide leaderboard
+                leaderboardUrl = Paths.LEADERBOARD_PATH;
+                Log.d("Leaderboard", "Using Application Leaderboard URL: " + leaderboardUrl);
+            }
+
             OkHttpClient client = HTTPClientUtils.getClient(ctx);
-            Request request = createRequestBuilderWithUserAuth(apiEndpoint.getFullURL(ctx, Paths.LEADERBOARD_PATH)).build();
+            Request request = createRequestBuilderWithUserAuth(apiEndpoint.getFullURL(ctx, leaderboardUrl)).build();
             Response response = client.newCall(request).execute();
-            if (response.isSuccessful()){
+
+            if (response.isSuccessful()) {
                 String json = response.body().string();
                 int updatedPositions = 0;
                 try {
                     updatedPositions += LeaderboardUtils.importLeaderboardJSON(ctx, json);
                     result.setSuccess(true);
                     result.setResultMessage(updatedPositions + " updated.");
-                } catch (ParseException e) {
+                } catch (ParseException | JSONException | WrongServerException e) {
                     Analytics.logException(e);
-                    Log.d(TAG, "ParseException:", e);
-                    result.setSuccess(false);
-                } catch (JSONException e) {
-                    Analytics.logException(e);
-                    Log.d(TAG, "JSONException:", e);
-                    result.setSuccess(false);
-                } catch (WrongServerException e) {
-                    Analytics.logException(e);
-                    Log.d(TAG, "WrongServerException:", e);
+                    Log.d(TAG, "Exception:", e);
                     result.setSuccess(false);
                 }
-            }
-            else{
-                if (response.code() == 401){
+            } else {
+                if (response.code() == 401) {
                     invalidateApiKey(result);
-                }
-                if (response.code() == 404){
+                } else if (response.code() == 404) {
                     result.setResultMessage("Your server version is old and does not support leaderboard export.");
                 }
-                else{
-
-                }
                 result.setSuccess(false);
-                response.body().close();
             }
+            response.close();
 
         } catch (IOException e) {
             Log.d(TAG, "IOException:", e);
@@ -82,6 +86,60 @@ public class UpdateLeaderboardFromServerTask extends APIRequestTask<Void, Object
         return result;
 
     }
+
+//    @Override
+//    protected BasicResult doInBackground(Void... params) {
+//
+//        BasicResult result = new BasicResult();
+//
+//        try {
+//            OkHttpClient client = HTTPClientUtils.getClient(ctx);
+//            Request request = createRequestBuilderWithUserAuth(apiEndpoint.getFullURL(ctx, Paths.LEADERBOARD_PATH)).build();
+//            Response response = client.newCall(request).execute();
+//            if (response.isSuccessful()){
+//                String json = response.body().string();
+//                int updatedPositions = 0;
+//                try {
+//                    updatedPositions += LeaderboardUtils.importLeaderboardJSON(ctx, json);
+//                    result.setSuccess(true);
+//                    result.setResultMessage(updatedPositions + " updated.");
+//                } catch (ParseException e) {
+//                    Analytics.logException(e);
+//                    Log.d(TAG, "ParseException:", e);
+//                    result.setSuccess(false);
+//                } catch (JSONException e) {
+//                    Analytics.logException(e);
+//                    Log.d(TAG, "JSONException:", e);
+//                    result.setSuccess(false);
+//                } catch (WrongServerException e) {
+//                    Analytics.logException(e);
+//                    Log.d(TAG, "WrongServerException:", e);
+//                    result.setSuccess(false);
+//                }
+//            }
+//            else{
+//                if (response.code() == 401){
+//                    invalidateApiKey(result);
+//                }
+//                if (response.code() == 404){
+//                    result.setResultMessage("Your server version is old and does not support leaderboard export.");
+//                }
+//                else{
+//
+//                }
+//                result.setSuccess(false);
+//                response.body().close();
+//            }
+//
+//        } catch (IOException e) {
+//            Log.d(TAG, "IOException:", e);
+//            result.setSuccess(false);
+//            result.setResultMessage(ctx.getString(R.string.error_connection_required));
+//        }
+//
+//        return result;
+//
+//    }
 
     @Override
     protected void onPostExecute(BasicResult result) {

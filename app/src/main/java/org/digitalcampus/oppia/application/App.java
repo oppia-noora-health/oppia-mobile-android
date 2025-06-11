@@ -99,6 +99,7 @@ public class App extends Application {
     public static final String WORK_COURSES_NOT_COMPLETED_REMINDER = "courses_reminder";
     public static final String WORK_COURSES_NOT_COMPLETED_REMINDER_ = "courses_reminder_";
     public static final String WORK_USER_PROFILE_CHECKS = "user_profile_checks_worker";
+    public static final String WORK_BADGES_CHECKS = "badges_checks_worker";
 
 
     private AppComponent appComponent;
@@ -152,7 +153,31 @@ public class App extends Application {
         OppiaNotificationUtils.initializeOreoNotificationChannels(this);
 
 //        launchWorkerToTest();
+//        launchBadgeWorkerToTest();
     }
+
+//    private void launchBadgeWorkerToTest() {
+//        OneTimeWorkRequest badgeTestWork = new OneTimeWorkRequest.Builder(
+//                org.digitalcampus.oppia.service.BadgesChecksWorker.class)
+//                .build();
+//
+//        WorkManager.getInstance(this)
+//                .enqueueUniqueWork("badge_test_worker", ExistingWorkPolicy.REPLACE, badgeTestWork);
+//    }
+
+    private void launchBadgeWorkerToTest() {
+        SharedPreferences prefs = getSharedPreferences("org.digitalcampus.oppia_preferences", Context.MODE_PRIVATE);
+        prefs.edit().remove("pref_new_badges_notified").apply();  // ⬅️ Clear previously seen badges
+
+        OneTimeWorkRequest badgeTestWork = new OneTimeWorkRequest.Builder(
+                org.digitalcampus.oppia.service.BadgesChecksWorker.class)
+                .build();
+
+        WorkManager.getInstance(this)
+                .enqueueUniqueWork("badge_test_worker", ExistingWorkPolicy.REPLACE, badgeTestWork);
+    }
+
+
 
     private void launchWorkerToTest() {
 
@@ -204,8 +229,10 @@ public class App extends Application {
             scheduleTrackerWork();
             scheduleUserProfileChecksWork();
             scheduleCoursesChecksWork();
+            scheduleBadgesChecksWork();//by viven
         } else {
             cancelWorks(WORK_COURSES_CHECKS, WORK_TRACKER_SEND, WORK_USER_PROFILE_CHECKS);
+            cancelWorks("old_badge_worker");
         }
 
         scheduleCoursesReminderWork();
@@ -254,6 +281,26 @@ public class App extends Application {
                 ExistingPeriodicWorkPolicy.REPLACE, trackerSendWork);
 
     }
+
+    //added by viven
+    private void scheduleBadgesChecksWork() {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+
+        PeriodicWorkRequest badgeCheckWork = new PeriodicWorkRequest.Builder(
+                org.digitalcampus.oppia.service.BadgesChecksWorker.class,
+                12, TimeUnit.HOURS)
+                .setConstraints(constraints)
+                .build();
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                WORK_BADGES_CHECKS,
+                ExistingPeriodicWorkPolicy.REPLACE,
+                badgeCheckWork
+        );
+    }
+
 
     private void scheduleUserProfileChecksWork() {
         Constraints constraints = new Constraints.Builder()

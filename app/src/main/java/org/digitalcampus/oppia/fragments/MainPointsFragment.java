@@ -48,5 +48,36 @@ public class MainPointsFragment extends TabsFragment {
         }
 
         configureFragments(fragments, tabTitles);
+
+        // ✅ Auto-select "Badges" tab if requested by MainActivity
+        selectInitialTabIfRequested();
     }
+
+    private void selectInitialTabIfRequested() {
+        if (getActivity() == null || getActivity().getIntent() == null) return;
+
+        String subTab = getActivity().getIntent().getStringExtra("open_points_subtab");
+
+        if ("badges".equals(subTab)) {
+            getActivity().getIntent().removeExtra("open_points_subtab");
+
+            new android.os.Handler().postDelayed(() -> {
+                com.google.android.material.tabs.TabLayout tabLayout = getTabLayout(); // ✅ safe access now
+                if (tabLayout != null) {
+                    int tabCount = tabLayout.getTabCount();
+                    for (int i = 0; i < tabCount; i++) {
+                        CharSequence tabTitle = tabLayout.getTabAt(i).getText();
+                        if (tabTitle != null &&
+                                tabTitle.toString().equalsIgnoreCase(getString(R.string.tab_title_badges))) {
+                            tabLayout.getTabAt(i).select();
+                            break;
+                        }
+                    }
+                }
+            }, 200);
+        }
+    }
+
+
+
 }
