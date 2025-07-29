@@ -1,25 +1,24 @@
 {
   "fields": [
     {
-      "name":"gender",
-      "label":"Gender",
+      "name":"name",
+      "label":"Name",
       "order":8,
       "required":false,
       "helper_text":"",
-      "collection":"genders",
-      "type":"choices"
-    },
-    {
-      "name":"age",
-      "label":"Age",
-      "order":8,
-      "required":false,
-      "helper_text":"",
-      "type":"int"
+      "type":"str"
     },
     {
       "name":"regency",
       "label":"Regency/District",
+      "order":8,
+      "required":false,
+      "helper_text":"",
+      "type":"str"
+    },
+    {
+      "name":"province",
+      "label":"Province",
       "order":8,
       "required":false,
       "helper_text":"",
@@ -72,81 +71,31 @@
       "required":false,
       "helper_text":"",
       "type":"str"
-    },
-    {
-      "name":"pr1",
-      "label":"Profile field 1",
-      "order":11,
-      "required":false,
-      "helper_text":"",
-      "type":"boolean"
-    },
-    {
-      "name":"pr2",
-      "label":"Profile field 2",
-      "order":12,
-      "required":false,
-      "helper_text":"Helper hepling you",
-      "type":"str"
-    },
-    {
-      "name":"pr3",
-      "label":"Profile field 3",
-      "order":12,
-      "required":false,
-      "helper_text":"Helper hepling you",
-      "type":"str"
     }
   ],
-  "required_fields": ["email","phoneno"],
-  "collections": [
-    {
-      "collection_name": "genders",
-      "items": [
-        {"id": "female", "value":"Female"},
-        {"id": "male", "value":"Male"},
-        {"id": "prefer_not_to_say", "value":"Prefer not to say"}
-      ]
-    }
-  ],
+  "required_fields": ["phoneno"],
   "register_steps": [
     {
       "order": 1,
       "title":"First step",
-      "helper_text":"Please enter a username and your name",
+      "helper_text":"Please provide a Phone number",
       "fields":[
-        "username",
-        "first_name",
-        "last_name"
+        "phoneno"
       ]
-    },
-    {
+    },{
       "order": 2,
       "title":"Second step",
-      "helper_text":"Please enter a password",
+      "helper_text":"Information provided from the server for the given number",
       "fields":[
-        "password",
-        "passwordagain"
-      ]
-    },
-    {
-      "order": 3,
-      "title":"Third step",
-      "helper_text":"Please provide some extra contact information",
-      "fields":[
-        "email",
-        "phoneno",
-        "organisation",
-        "gender",
-        "age",
-        "jobtitle",
+        "name",
         "regency",
         "facility",
         "designation",
         "department",
         "facility_type",
         "state",
-        "district"
+        "district",
+        "province"
       ]
     }
   ]

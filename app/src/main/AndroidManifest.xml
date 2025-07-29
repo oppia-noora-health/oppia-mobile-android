@@ -234,6 +234,13 @@
                 android:value="true" />
         </service>
 
+        <receiver android:name="org.digitalcampus.oppia.service.OtpSmsReceiver"
+            android:exported="true">
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
     <queries>

@@ -26,8 +26,8 @@
 
     <string name="fragment_welcome_title">Welcome to &appName;</string>
     <string name="fragment_welcome_desc">&appName; is a mobile learning platform for delivering learning content, video and quizzes.</string>
-    <string name="fragment_welcome_login_info">To get started with &appName;, you will need to register or login.</string>
-    <string name="fragment_welcome_privacy_info">By registering or logging in, you agree to our <a href="">Privacy Policy and Terms of Service</a>.</string>
+    <string name="fragment_welcome_login_info">To begin using &appName;, please sign in with your Care Companion App or Catat SKS login details. If you don\'t have these credentials, reach out to the Noora team member at your health facility for support.</string>
+    <string name="fragment_welcome_privacy_info">By logging in, you agree to our <a href="">Privacy Policy and Terms of Service</a>.</string>
     <string name="fragment_welcome_powered_by">Powered by <a href="https://digital-campus.org/oppiamobile/">OppiaMobile</a></string>
 
     <string name="drawer_header_background_description">Background image</string>
@@ -528,7 +528,7 @@
     <string name="nav_home">Home</string>
     <string name="nav_scorecard">Scorecard</string>
     <string name="nav_points">Points</string>
-    <string name="edit_profile">Edit profile</string>
+    <string name="edit_profile">View profile</string>
 
 
     <string name="info_override_password">Overriding admin password</string>

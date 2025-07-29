@@ -17,16 +17,18 @@
 
 package org.digitalcampus.oppia.fragments;
 
+import static org.digitalcampus.oppia.holder.ActivityHolder.getActivity;
+
 import android.Manifest;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.telephony.SmsMessage;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -41,39 +43,30 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 
 import com.hbb20.CountryCodePicker;
 
 import org.digitalcampus.mobile.learning.R;
-import org.digitalcampus.mobile.learning.databinding.FragmentLoginBinding;
 import org.digitalcampus.oppia.activity.WelcomeActivity;
 import org.digitalcampus.oppia.api.ApiEndpoint;
 import org.digitalcampus.oppia.api.Paths;
 import org.digitalcampus.oppia.listener.SubmitEntityListener;
 import org.digitalcampus.oppia.model.User;
+import org.digitalcampus.oppia.service.OtpSmsReceiver;
+import org.digitalcampus.oppia.task.ChannelFetchTask;
+import org.digitalcampus.oppia.task.ExternalProfileTask;
 import org.digitalcampus.oppia.task.LoginTask;
+import org.digitalcampus.oppia.task.SendOTPTask;
 import org.digitalcampus.oppia.task.result.EntityResult;
 import org.digitalcampus.oppia.utils.UIUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class LoginFragment extends AppFragment implements SubmitEntityListener<User> {
 
@@ -82,6 +75,7 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
 
     //    changed by namratha
     private static final int PERMISSION_REQUEST_CODE = 101;
+    private View inputLayout, otpLayout;
     private Spinner countrySpinner;
     private Spinner languageSpinner;
     private CountryCodePicker ccp;
@@ -91,18 +85,20 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
     private Button sendOtpBtn;
     private Button verifyOtpBtn;
     private Button registerBtn;
+    private Button resendOtpBtnSms;
+    private Button resendOtpBtnWhatsapp;
+    private TextView otpSentTextView;
     private boolean isOtpTimerFinished = false;
-    private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private CountDownTimer countDownTimer;
-    private SmsBroadcastReceiver smsBroadcastReceiver;
+    private boolean shouldSendOtpAfterPermission = false;
 
-//    changed by namratha
+    //    changed by namratha
 //    private FragmentLoginBinding binding;
     public static LoginFragment newInstance() {
         return new LoginFragment();
     }
 
-//    changed by namratha
+    //    changed by namratha
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -113,6 +109,8 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
         //    changed by namratha
         View view = inflater.inflate(R.layout.fragment_login_otp, container, false);
 
+        inputLayout = view.findViewById(R.id.layout_phone_entry);  // screen 1
+        otpLayout = view.findViewById(R.id.layout_otp_entry);      // screen 2
         phoneEditText = view.findViewById(R.id.register_form_phoneno_edittext);
         otpDigit1 = view.findViewById(R.id.otp_digit_1);
         otpDigit2 = view.findViewById(R.id.otp_digit_2);
@@ -123,14 +121,64 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
         otpTimer = view.findViewById(R.id.text_otp_timer);
         sendOtpBtn = view.findViewById(R.id.btn_send_otp);
         verifyOtpBtn = view.findViewById(R.id.btn_verify_otp);
-        registerBtn = view.findViewById(R.id.action_register_btn);
+        resendOtpBtnSms = view.findViewById(R.id.btn_resend_otp_sms);
+        resendOtpBtnWhatsapp = view.findViewById(R.id.btn_resend_otp_whatsapp);
+//        registerBtn = view.findViewById(R.id.action_register_btn);
         countrySpinner = view.findViewById(R.id.spinner_country);
         languageSpinner = view.findViewById(R.id.spinner_language);
+        otpSentTextView = view.findViewById(R.id.text_otp_sent);
         ccp = view.findViewById(R.id.ccp);
         setupCountryAndLanguageSpinners();
+        // By default show only screen 1
+        otpLayout.setVisibility(View.GONE);
+        verifyOtpBtn.setEnabled(false);
+        sendOtpBtn.setEnabled(false);
+
+
+        // Enable it when phone number is valid
+        phoneEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                sendOtpBtn.setEnabled(s.length() >= 10);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        TextWatcher otpWatcher = new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                checkOtpFieldsFilled();
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        };
+
+        // Add to all 6 OTP fields
+        otpDigit1.addTextChangedListener(otpWatcher);
+        otpDigit2.addTextChangedListener(otpWatcher);
+        otpDigit3.addTextChangedListener(otpWatcher);
+        otpDigit4.addTextChangedListener(otpWatcher);
+        otpDigit5.addTextChangedListener(otpWatcher);
+        otpDigit6.addTextChangedListener(otpWatcher);
 
 //        return binding.getRoot();
         return view;
+    }
+
+    private void checkOtpFieldsFilled() {
+        boolean allFilled =
+                !otpDigit1.getText().toString().trim().isEmpty() &&
+                        !otpDigit2.getText().toString().trim().isEmpty() &&
+                        !otpDigit3.getText().toString().trim().isEmpty() &&
+                        !otpDigit4.getText().toString().trim().isEmpty() &&
+                        !otpDigit5.getText().toString().trim().isEmpty() &&
+                        !otpDigit6.getText().toString().trim().isEmpty();
+
+        verifyOtpBtn.setEnabled(allFilled);
     }
 
 
@@ -166,46 +214,90 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
         //    changed by namratha
         sendOtpBtn.setOnClickListener(v -> {
             if (checkAndRequestPermissions()) {
-                ccp.registerCarrierNumberEditText(phoneEditText);
-                String mobile = phoneEditText.getText().toString().trim();
-                if ((mobile.length() > 0) && !ccp.isValidFullNumber()) {
-                    UIUtils.showAlert(getActivity(), R.string.error, R.string.error_invalid_phone);
-                    return;
-                }
-                String fullNumber = ccp.getFullNumberWithPlus();
-
-                if (isOtpTimerFinished) {
-                    // Timer ended: ask for channel
-                    fetchChannelsAndShowDialog(fullNumber);
-                } else {
-                    // Default SMS
-                    sendOtp();
-                }
+                sendOtpWithValidation();
+            } else {
+                // Set the flag so we know user intended to send OTP
+                shouldSendOtpAfterPermission = true;
             }
         });
 
+        resendOtpBtnSms.setOnClickListener( v ->{
+            ccp.registerCarrierNumberEditText(phoneEditText);
+            String fullNumber = ccp.getFormattedFullNumber();
+//            if (isOtpTimerFinished) {
+                sendOtpWithChannel(fullNumber,"sms");
+//            }
+        } );
+
+        resendOtpBtnWhatsapp.setOnClickListener( v ->{
+            ccp.registerCarrierNumberEditText(phoneEditText);
+            String fullNumber = ccp.getFormattedFullNumber();
+//            if (isOtpTimerFinished) {
+                // Timer ended: ask for channel
+                sendOtpWithChannel(fullNumber,"whatsapp");
+//            }
+        } );
+
         verifyOtpBtn.setOnClickListener(v -> verifyandloginOtp());
 
-        registerBtn.setOnClickListener(v -> {
-            WelcomeActivity wa = (WelcomeActivity) getActivity();
-            wa.switchTab(WelcomeActivity.TAB_REGISTER);
-        });
 
-        // Register SMS BroadcastReceiver
-        smsBroadcastReceiver = new SmsBroadcastReceiver();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("android.provider.Telephony.SMS_RECEIVED");
-        requireActivity().registerReceiver(smsBroadcastReceiver, intentFilter);
+
+//        registerBtn.setOnClickListener(v -> {
+//            WelcomeActivity wa = (WelcomeActivity) getActivity();
+//            wa.switchTab(WelcomeActivity.TAB_REGISTER);
+//        });
     }
+
+    private void sendOtpWithValidation() {
+        ccp.registerCarrierNumberEditText(phoneEditText);
+        String mobile = phoneEditText.getText().toString().trim();
+        if ((mobile.length() > 0) && !ccp.isValidFullNumber()) {
+            UIUtils.showAlert(getActivity(), R.string.error, R.string.error_invalid_phone);
+            return;
+        }
+        String fullNumber = ccp.getFormattedFullNumber();
+        checkExternalProfileAndSendOtp(fullNumber);
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) requireContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager != null) {
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        }
+        return false;
+    }
+
+    private void checkExternalProfileAndSendOtp(String fullPhoneNumber) {
+        if (!isNetworkAvailable()) {
+            UIUtils.showAlert(getActivity(), R.string.error, R.string.error_connection_needed);
+            return;
+        }
+
+        String url = apiEndpoint.getFullURL(requireContext(), Paths.EXTERNALPROFILE_PATH);
+
+        ExternalProfileTask.execute(requireContext(), url, fullPhoneNumber, new ExternalProfileTask.ExternalProfileCallback() {
+            @Override
+            public void onSuccess(JSONObject fullResponse) {
+                sendOtp();
+            }
+
+            @Override
+            public void onNotFound() {
+                UIUtils.showAlert(getActivity(), R.string.error, R.string.error_login);
+            }
+
+            @Override
+            public void onError(String error) {
+                UIUtils.showAlert(getActivity(), R.string.error, R.string.error_login);
+            }
+        });
+    }
+
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        //    changed by namratha
-        if (smsBroadcastReceiver != null) {
-            requireActivity().unregisterReceiver(smsBroadcastReceiver);
-            smsBroadcastReceiver = null;
-        }
     }
 
     //    changed by namratha
@@ -242,58 +334,15 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
                 }
             }
             if (allGranted) {
-                Toast.makeText(getActivity(), "Permissions granted. Please try again.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Permissions granted.", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(getActivity(), "Permissions denied. Cannot auto-fill OTP.", Toast.LENGTH_LONG).show();
             }
-        }
-    }
 
-    //    changed by namratha
-    private class SmsBroadcastReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if ("android.provider.Telephony.SMS_RECEIVED".equals(intent.getAction())) {
-                Bundle bundle = intent.getExtras();
-                if (bundle != null) {
-                    Object[] pdus = (Object[]) bundle.get("pdus");
-                    if (pdus != null) {
-                        for (Object pdu : pdus) {
-                            SmsMessage smsMessage;
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                String format = bundle.getString("format");
-                                smsMessage = SmsMessage.createFromPdu((byte[]) pdu, format);
-                            } else {
-                                smsMessage = SmsMessage.createFromPdu((byte[]) pdu);
-                            }
-                            String messageBody = smsMessage.getMessageBody();
-                            Log.d("LoginFragment", "SMS received: " + messageBody);
-
-                            // Extract 6-digit OTP from the message body
-                            String otp = extractOtp(messageBody);
-                            if (otp != null && otp.length() == 6) {
-                                autofillOtp(otp);
-                                // Optionally cancel broadcast so other apps don't intercept
-                                abortBroadcast();
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
+            //Call this in both cases — to allow OTP to be sent regardless
+            sendOtpWithValidation();
+            shouldSendOtpAfterPermission = false;
         }
-    }
-
-    //    changed by namratha
-    private String extractOtp(String message) {
-        if (message == null) return null;
-        // Simple regex to find first 6-digit number in SMS
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\b\\d{6}\\b");
-        java.util.regex.Matcher matcher = pattern.matcher(message);
-        if (matcher.find()) {
-            return matcher.group(0);
-        }
-        return null;
     }
 
     //    changed by namratha
@@ -322,7 +371,7 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
             return;
         }
 
-        String fullNumber = ccp.getFullNumberWithPlus();
+        String fullNumber = ccp.getFormattedFullNumber();
 
         phoneEditText.setEnabled(false);
         sendOtpBtn.setEnabled(false);
@@ -331,112 +380,69 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
     }
 
     //    changed by namratha
-    private void fetchChannelsAndShowDialog(String fullPhoneNumber) {
-        String url = apiEndpoint.getFullURL(requireContext(), Paths.CHANNEL_PATH);
-        OkHttpClient client = new OkHttpClient();
-        JSONObject json = new JSONObject();
-        try {
-            json.put("phone_number", fullPhoneNumber);
-        } catch (JSONException e) {
-            e.printStackTrace();
+    private void fetchChannels(String fullPhoneNumber) {
+        if (!isNetworkAvailable()) {
+            UIUtils.showAlert(getActivity(), R.string.error, R.string.error_connection_needed);
             return;
         }
-        RequestBody body = RequestBody.create(json.toString(), JSON);
-        Request request = new Request.Builder().url(url).post(body).build();
 
-        client.newCall(request).enqueue(new Callback() {
+        String url = apiEndpoint.getFullURL(requireContext(), Paths.CHANNEL_PATH);
+
+        ChannelFetchTask.execute(requireContext(), url, fullPhoneNumber, new ChannelFetchTask.ChannelCallback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                requireActivity().runOnUiThread(() ->
-                        Toast.makeText(getActivity(), "Failed to fetch channels", Toast.LENGTH_SHORT).show()
-                );
+            public void onChannelsFetched(boolean showSms, boolean showWhatsapp) {
+                resendOtpBtnSms.setVisibility(showSms ? View.VISIBLE : View.GONE);
+                resendOtpBtnSms.setEnabled(showSms);
+
+                resendOtpBtnWhatsapp.setVisibility(showWhatsapp ? View.VISIBLE : View.GONE);
+                resendOtpBtnWhatsapp.setEnabled(showWhatsapp);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    String responseStr = response.body().string();
-                    try {
-                        JSONObject json = new JSONObject(responseStr);
-                        JSONArray channels = json.getJSONArray("channels");
-                        List<String> channelNames = new ArrayList<>();
-                        List<String> channelIds = new ArrayList<>();
-                        for (int i = 0; i < channels.length(); i++) {
-                            JSONObject ch = channels.getJSONObject(i);
-                            channelNames.add(ch.getString("name"));
-                            channelIds.add(ch.getString("id"));
-                        }
-                        requireActivity().runOnUiThread(() ->
-                                showChannelSelectionDialog(fullPhoneNumber, channelNames, channelIds));
-                    } catch (JSONException e) {
-                        requireActivity().runOnUiThread(() ->
-                                Toast.makeText(getActivity(), "Failed to parse channel response", Toast.LENGTH_SHORT).show()
-                        );
-                    }
-                } else {
-                    requireActivity().runOnUiThread(() ->
-                            Toast.makeText(getActivity(), "Error fetching channels", Toast.LENGTH_SHORT).show()
-                    );
-                }
+            public void onError(String message) {
+                Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    //    changed by namratha
-    private void showChannelSelectionDialog(String fullPhoneNumber, List<String> channelNames, List<String> channelIds) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Choose Channel");
-        CharSequence[] namesArray = channelNames.toArray(new CharSequence[0]);
-        builder.setItems(namesArray, (dialog, which) -> {
-            String selectedChannel = channelIds.get(which);
-            sendOtpWithChannel(fullPhoneNumber, selectedChannel);
-        });
-        builder.show();
     }
 
     //    changed by namratha
     private void sendOtpWithChannel(String fullNumber, String channel) {
-        String url = apiEndpoint.getFullURL(requireContext(), Paths.SEND_OTP_PATH);
-        OkHttpClient client = new OkHttpClient();
-
-        JSONObject json = new JSONObject();
-        try {
-            json.put("phone_number", fullNumber);
-            json.put("channel", channel);
-        } catch (JSONException e) {
-            e.printStackTrace();
+        if (!isNetworkAvailable()) {
+            UIUtils.showAlert(getActivity(), R.string.error, R.string.error_connection_needed);
             return;
         }
 
-        RequestBody body = RequestBody.create(json.toString(), JSON);
-        Request request = new Request.Builder().url(url).post(body).build();
+        String url = apiEndpoint.getFullURL(requireContext(), Paths.SEND_OTP_PATH);
 
-        client.newCall(request).enqueue(new Callback() {
+        SendOTPTask.execute(requireContext(), url, fullNumber, channel, new SendOTPTask.SendOtpCallback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                requireActivity().runOnUiThread(() -> {
-                    Toast.makeText(getActivity(), "Failed to send OTP", Toast.LENGTH_SHORT).show();
-                    phoneEditText.setEnabled(true);
-                    sendOtpBtn.setEnabled(true);
-                });
+            public void onSuccess() {
+                Toast.makeText(getActivity(), "OTP sent", Toast.LENGTH_SHORT).show();
+                inputLayout.setVisibility(View.GONE);
+                otpLayout.setVisibility(View.VISIBLE);
+                String formattedMessage = "We have sent a one-time password (OTP) to \n" + fullNumber + " for verification";
+                otpSentTextView.setText(formattedMessage);
+                startOtpCountdown();
             }
 
             @Override
-            public void onResponse(Call call, Response response) {
-                requireActivity().runOnUiThread(() -> {
-                    if (response.isSuccessful()) {
-                        Toast.makeText(getActivity(), "OTP sent", Toast.LENGTH_SHORT).show();
-                        startOtpCountdown();
-                    } else {
-                        Toast.makeText(getActivity(), "Phone number not found.", Toast.LENGTH_SHORT).show();
-                        Toast.makeText(getActivity(), "Please contact your nearest Noora Health team member for Assistance.", Toast.LENGTH_SHORT).show();
-                        phoneEditText.setEnabled(true);
-                        sendOtpBtn.setEnabled(true);
-                    }
-                });
+            public void onNotFound() {
+                Toast.makeText(getActivity(), "Phone number not found.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Please contact your nearest Noora Health team member for Assistance.", Toast.LENGTH_SHORT).show();
+                phoneEditText.setEnabled(true);
+                sendOtpBtn.setEnabled(true);
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(getActivity(), "Phone number not found.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Please contact your nearest Noora Health team member for Assistance.", Toast.LENGTH_SHORT).show();
+                phoneEditText.setEnabled(true);
+                sendOtpBtn.setEnabled(true);
             }
         });
     }
+
 
     //    changed by namratha
     private void startOtpCountdown() {
@@ -444,6 +450,8 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
         phoneEditText.setEnabled(false);
         sendOtpBtn.setEnabled(false);
         isOtpTimerFinished = false;
+        resendOtpBtnSms.setVisibility(View.GONE);
+        resendOtpBtnWhatsapp.setVisibility(View.GONE);
 
         if (countDownTimer != null) {
             countDownTimer.cancel();
@@ -457,8 +465,10 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
 
             public void onFinish() {
                 otpTimer.setText("Resend otp in 00:00");
-                phoneEditText.setEnabled(true);
-                sendOtpBtn.setEnabled(true);  // Enable Send OTP after timer
+                otpTimer.setVisibility(View.GONE);
+                ccp.registerCarrierNumberEditText(phoneEditText);
+                String fullNumber = ccp.getFormattedFullNumber();
+                fetchChannels(fullNumber);
                 isOtpTimerFinished = true;    // Mark timer as finished
             }
         }.start();
@@ -492,11 +502,15 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
             return;
         }
 
+        if (!isNetworkAvailable()) {
+            UIUtils.showAlert(getActivity(), R.string.error, R.string.error_connection_needed);
+            return;
+        }
+
         showProgressDialog(getString(R.string.login_process));
 
         User user = new User();
-        user.setUsername(ccp.getFullNumberWithPlus());
-        user.setPhoneNo(ccp.getFullNumberWithPlus());
+        user.setPhoneNo(ccp.getFormattedFullNumber());
 
         LoginTask lt = new LoginTask(getActivity(), apiEndpoint);
         lt.setOtpCode(otp);
@@ -546,8 +560,19 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
     public void onPause() {
         super.onPause();
         hideProgressDialog();
-        //    changed by namratha
-        if (countDownTimer != null) countDownTimer.cancel();
+        OtpSmsReceiver.setOtpListener(null); // avoid memory leaks
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        OtpSmsReceiver.setOtpListener(new OtpSmsReceiver.OtpListener() {
+            @Override
+            public void onOtpReceived(String otp) {
+                autofillOtp(otp); // your function to set the digits
+            }
+        });
     }
 
     //    changed by namratha

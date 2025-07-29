@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Enabled state -->
+    <item android:state_enabled="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/toolbar_bg_color" /> <!-- Pink toolbar color -->
+            <corners android:radius="4dp" />
+        </shape>
+    </item>
+
+    <!-- Default (disabled) state -->
+    <item android:state_enabled="false">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/grey_light" /> <!-- Light default button color -->
+            <corners android:radius="4dp" />
+        </shape>
+    </item>
+</selector>

@@ -27,6 +27,7 @@ public class Paths {
     //    changed by namratha
     public static final String SEND_OTP_PATH = OPPIAMOBILE_API + "sendotp/";
     public static final String CHANNEL_PATH = OPPIAMOBILE_API + "channel/";
+    public static final String EXTERNALPROFILE_PATH = OPPIAMOBILE_API + "externalprofile/";
 
     private Paths() {
         throw new IllegalStateException("Utility class");

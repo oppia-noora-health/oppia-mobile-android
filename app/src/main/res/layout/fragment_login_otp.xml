@@ -1,22 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/otp_scroll_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:scrollbars="vertical">
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="left"
         android:orientation="vertical">
 
+        <!-- Top Toolbar Section -->
         <TextView
             android:id="@+id/textView24"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/activity_vertical_margin"
             android:background="@drawable/bg_toolbar"
             android:drawableTop="@drawable/brand_icon"
             android:gravity="center"
@@ -26,166 +25,196 @@
             android:textAppearance="@style/SectionHeader"
             android:textColor="@color/toolbar_text_color" />
 
+        <!-- Screen 1: Phone Entry -->
         <LinearLayout
+            android:id="@+id/layout_phone_entry"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/activity_horizontal_margin"
-            android:layout_marginEnd="@dimen/activity_horizontal_margin"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_margin="20dp">
 
-            <!-- Country Dropdown changed by namratha-->
+            <!-- Country Spinner -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Country"
-                android:textStyle="bold"
-                android:layout_marginTop="@dimen/margin_medium"
-                android:layout_marginStart="@dimen/padding_large"
-                android:layout_marginEnd="@dimen/padding_large"
-                android:textSize="15sp" />
-
+                android:textStyle="bold" />
             <Spinner
                 android:id="@+id/spinner_country"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/padding_large"
-                android:layout_marginEnd="@dimen/padding_large"
-                android:textSize="15sp" />
+                android:layout_height="48dp"
+                android:padding="12dp" />
 
-            <!-- Language Dropdown changed by namratha-->
+            <!-- Language Spinner -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:text="Language"
-                android:textStyle="bold"
-                android:layout_marginTop="@dimen/margin_medium"
-                android:layout_marginStart="@dimen/padding_large"
-                android:layout_marginEnd="@dimen/padding_large"
-                android:textSize="15sp" />
-
+                android:textStyle="bold" />
             <Spinner
                 android:id="@+id/spinner_language"
                 android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:padding="12dp" />
+
+            <!-- Phone Number -->
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/padding_large"
-                android:layout_marginEnd="@dimen/padding_large"
-                android:textSize="15sp" />
+                android:layout_marginTop="16dp"
+                android:text="Phone Number"
+                android:textStyle="bold"
+                android:textColor="@color/black" />
 
-            <!-- Phone Number with Country Code Picker changed by namratha-->
-            <org.digitalcampus.oppia.utils.ui.fields.ValidableNestedTextInputLayout
-                android:id="@+id/register_form_phoneno_field"
-                style="@style/Oppia.CustomField.TextInputLayout"
-                android:layout_marginTop="@dimen/margin_medium"
-                android:layout_marginStart="@dimen/padding_large"
-                android:layout_marginEnd="@dimen/padding_large"
-                android:gravity="center_vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-                <LinearLayout
-                    android:id="@+id/field_phoneno_container"
+                <com.hbb20.CountryCodePicker
+                    android:id="@+id/ccp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <EditText
+                    android:id="@+id/register_form_phoneno_edittext"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_height="48dp"
+                    android:inputType="phone"
+                    android:backgroundTint="@color/black"
+                    android:textColor="@color/black"
+                    android:padding="12dp" />
+            </LinearLayout>
 
-                    <com.hbb20.CountryCodePicker
-                        android:id="@+id/ccp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="bottom"
-                        android:textSize="15sp"
-                        app:ccp_autoDetectCountry="true" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/ccp_text_input_layout"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <EditText
-                            android:id="@+id/register_form_phoneno_edittext"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="@string/register_form_phoneno_title"
-                            android:inputType="phone"
-                            android:singleLine="true"
-                            android:textSize="15sp" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                </LinearLayout>
-            </org.digitalcampus.oppia.utils.ui.fields.ValidableNestedTextInputLayout>
-
-            <!-- Send OTP Button changed by namratha-->
+            <!-- Send OTP -->
             <Button
                 android:id="@+id/btn_send_otp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/padding_large"
-                android:layout_marginTop="@dimen/padding_medium"
-                android:layout_marginEnd="@dimen/padding_large"
-                android:text="Send OTP" />
+                android:layout_marginTop="16dp"
+                android:text="Send OTP"
+                android:enabled="false"
+                android:background="@drawable/button_state_background"
+                android:textColor="@color/button_text_color_selector" />
+        </LinearLayout>
 
-            <!-- OTP Field changed by namratha-->
-            <!-- OTP Input Fields -->
+        <!-- Screen 2: OTP Verification (Initially Hidden) -->
+        <LinearLayout
+            android:id="@+id/layout_otp_entry"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:visibility="gone"
+            android:layout_margin="20dp">
+
+            <TextView
+                android:id="@+id/text_otp_sent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="@android:color/black"
+                android:layout_marginBottom="16dp"
+                android:layout_gravity="center"/>
+
+            <!-- OTP Input Boxes -->
             <LinearLayout
                 android:id="@+id/otp_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_medium"
-                android:layout_marginHorizontal="@dimen/padding_large"
-                android:gravity="center"
-                android:padding="6dp"
                 android:orientation="horizontal"
-                android:weightSum="6">
+                android:gravity="center"
+                android:weightSum="6"
+                android:paddingVertical="8dp">
 
-                <EditText android:id="@+id/otp_digit_1" style="@style/OtpEditBox" android:layout_marginEnd="4dp" />
-                <EditText android:id="@+id/otp_digit_2" style="@style/OtpEditBox" android:layout_marginEnd="4dp" />
-                <EditText android:id="@+id/otp_digit_3" style="@style/OtpEditBox" android:layout_marginEnd="4dp" />
-                <EditText android:id="@+id/otp_digit_4" style="@style/OtpEditBox" android:layout_marginEnd="4dp" />
-                <EditText android:id="@+id/otp_digit_5" style="@style/OtpEditBox" android:layout_marginEnd="4dp" />
-                <EditText android:id="@+id/otp_digit_6" style="@style/OtpEditBox" />
+                <EditText
+                    android:id="@+id/otp_digit_1"
+                    style="@style/OtpEditBox" />
+                <EditText
+                    android:id="@+id/otp_digit_2"
+                    style="@style/OtpEditBox" />
+                <EditText
+                    android:id="@+id/otp_digit_3"
+                    style="@style/OtpEditBox" />
+                <EditText
+                    android:id="@+id/otp_digit_4"
+                    style="@style/OtpEditBox" />
+                <EditText
+                    android:id="@+id/otp_digit_5"
+                    style="@style/OtpEditBox" />
+                <EditText
+                    android:id="@+id/otp_digit_6"
+                    style="@style/OtpEditBox" />
             </LinearLayout>
 
-            <!-- OTP Timer changed by namratha-->
+            <!-- OTP Timer -->
             <TextView
                 android:id="@+id/text_otp_timer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Resend OTP in 00:60"
                 android:textStyle="bold"
-                android:layout_gravity="end"
-                android:layout_marginTop="@dimen/padding_medium"
-                android:layout_marginEnd="@dimen/padding_large"
-                android:textSize="15sp"
-                android:clickable="false"
-                android:focusable="false" />
+                android:layout_marginTop="8dp"
+                android:layout_gravity="center"/>
 
-            <!-- Verify OTP Button changed by namratha-->
+            <!-- Resend OTP Button -->
+            <Button
+                android:id="@+id/btn_resend_otp_sms"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Resend OTP via SMS"
+                android:textColor="@color/oppia_secondary"
+                android:background="@android:color/transparent"
+                android:textAllCaps="false"
+                android:textSize="15sp"
+                android:layout_gravity="center"
+                android:enabled="false"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/btn_resend_otp_whatsapp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Resend OTP via Whatsapp"
+                android:textColor="@color/oppia_secondary"
+                android:background="@android:color/transparent"
+                android:textAllCaps="false"
+                android:textSize="15sp"
+                android:layout_gravity="center"
+                android:enabled="false"
+                android:visibility="gone"/>
+
+            <!-- Confirm OTP -->
             <Button
                 android:id="@+id/btn_verify_otp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/padding_large"
-                android:layout_marginTop="@dimen/padding_medium"
-                android:layout_marginEnd="@dimen/padding_large"
-                android:text="Verify &amp; Login" />
+                android:layout_marginTop="16dp"
+                android:text="Confirm OTP"
+                android:enabled="false"
+                android:background="@drawable/button_state_background"
+                android:textColor="@color/button_text_color_selector" />
 
-            <!-- Registration option -->
-            <TextView
-                android:id="@+id/dont_have_account"
-                style="@style/SubheaderText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_large"
-                android:gravity="center"
-                android:text="@string/login_dont_have_account" />
+            <!--            <TextView-->
+            <!--                android:id="@+id/dont_have_account"-->
+            <!--                style="@style/SubheaderText"-->
+            <!--                android:layout_width="match_parent"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:layout_marginStart="@dimen/activity_horizontal_margin"-->
+            <!--                android:layout_marginTop="@dimen/padding_large"-->
+            <!--                android:layout_marginEnd="@dimen/activity_horizontal_margin"-->
+            <!--                android:gravity="center"-->
+            <!--                android:text="@string/login_dont_have_account" />-->
 
-            <Button
-                android:id="@+id/action_register_btn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/padding_large"
-                android:layout_marginTop="@dimen/padding_medium"
-                android:layout_marginEnd="@dimen/padding_large"
-                android:text="@string/title_register" />
-
+            <!--            <Button-->
+            <!--                android:id="@+id/action_register_btn"-->
+            <!--                android:layout_width="match_parent"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:layout_marginStart="@dimen/padding_large"-->
+            <!--                android:layout_marginEnd="@dimen/padding_large"-->
+            <!--                android:text="@string/title_register" />-->
         </LinearLayout>
 
     </LinearLayout>

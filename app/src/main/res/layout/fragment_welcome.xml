@@ -61,14 +61,14 @@
             android:gravity="center"
             android:text="@string/fragment_welcome_privacy_info" />
 
-        <Button
-            android:id="@+id/welcome_register"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/activity_horizontal_margin"
-            android:layout_marginEnd="@dimen/activity_horizontal_margin"
-            android:text="@string/title_register"
-            android:theme="@style/PrimaryButton" />
+<!--        <Button-->
+<!--            android:id="@+id/welcome_register"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginStart="@dimen/activity_horizontal_margin"-->
+<!--            android:layout_marginEnd="@dimen/activity_horizontal_margin"-->
+<!--            android:text="@string/title_register"-->
+<!--            android:theme="@style/PrimaryButton" />-->
 
         <Button
             android:id="@+id/welcome_login"
@@ -76,7 +76,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/activity_horizontal_margin"
             android:layout_marginEnd="@dimen/activity_horizontal_margin"
-            android:text="@string/title_login" />
+            android:text="@string/title_login"
+            android:theme="@style/PrimaryButton" />
 
         <TextView
             android:id="@+id/welcome_powered_by"

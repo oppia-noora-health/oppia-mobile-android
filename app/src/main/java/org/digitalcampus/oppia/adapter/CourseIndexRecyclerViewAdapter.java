@@ -3,6 +3,7 @@ package org.digitalcampus.oppia.adapter;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,7 +52,8 @@ public class CourseIndexRecyclerViewAdapter extends ExpandableRecyclerView.Adapt
         highlightCompleted = prefs.getBoolean(PrefsActivity.PREF_HIGHLIGHT_COMPLETED, App.DEFAULT_DISPLAY_COMPLETED);
         boolean startCollapsed = prefs.getBoolean(PrefsActivity.PREF_START_COURSEINDEX_COLLAPSED, false);
 
-        this.startExpanded = !startCollapsed;
+        this.startExpanded = startCollapsed;
+//        this.startExpanded = !startCollapsed;
         courseLocation = course.getLocation();
         highlightColor = ContextCompat.getColor(ctx, R.color.course_index_highlight);
         normalColor = ContextCompat.getColor(ctx, R.color.text_dark);

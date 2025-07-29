@@ -35,6 +35,13 @@ public class JSInterfaceForResourceImages extends JSInterface{
     public void openFile(String relativeFilePath) {
         File fileToOpen = new File(resourcesLocation + relativeFilePath);
         Log.d(TAG, "File to open externally: " + fileToOpen.getPath());
+
+        // Block image files from opening externally
+        if (relativeFilePath.endsWith(".jpg") || relativeFilePath.endsWith(".png") || relativeFilePath.endsWith(".jpeg")) {
+            Log.d(TAG, "Blocked image file from opening externally.");
+            return; // Do nothing
+        }
+
         Intent intent = ExternalResourceOpener.getIntentToOpenResource(context, fileToOpen);
         if(intent != null){
             context.startActivity(intent);

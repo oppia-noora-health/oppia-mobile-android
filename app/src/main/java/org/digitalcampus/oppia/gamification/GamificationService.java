@@ -3,6 +3,7 @@ package org.digitalcampus.oppia.gamification;
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -181,6 +182,7 @@ public class GamificationService  extends IntentService {
                     }
                 }
                 else if (SERVICE_EVENT_MEDIAPLAYBACK.equals(eventName)){
+                    Log.d("gamification event",eventName);
                     act = (Activity) intent.getSerializableExtra(SERVICE_ACTIVITY);
                     course = (Course) intent.getSerializableExtra(SERVICE_COURSE);
                     String filename = intent.getStringExtra(EVENTDATA_MEDIA_FILENAME);
@@ -188,12 +190,14 @@ public class GamificationService  extends IntentService {
                     boolean endReached = intent.getBooleanExtra(EVENTDATA_MEDIA_END_REACHED, false);
 
                     event = gEngine.processEventMediaPlayed(course, act, filename, timetaken, endReached);
+                    Log.d("gamification event",String.valueOf(event.getPoints()));
                     eventData.put(LOGDATA_TIMETAKEN, timetaken);
                     eventData.put(LOGDATA_MEDIAFILE, filename);
                     eventData.put(LOGDATA_MEDIA_EVENT, "played");
                     eventData.put(LOGDATA_MEDIA_ENDREACHED, endReached);
 
-                    Media m = act.getMedia(filename);
+                    Media m = act.getMedia(Uri.decode(filename));
+                    Log.d("gamification event",m.getFilename());
                     trackerDigest = (m != null) ? m.getDigest() : act.getDigest();
                 }
 
@@ -225,7 +229,7 @@ public class GamificationService  extends IntentService {
                     else{
                         broadcastEvent(event, act, course);
                     }
-                    
+
                 }
             }
         } catch (JSONException e) {

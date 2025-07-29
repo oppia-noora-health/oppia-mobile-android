@@ -17,6 +17,8 @@
 
 package org.digitalcampus.oppia.task;
 
+import static org.digitalcampus.oppia.holder.ActivityHolder.getActivity;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -47,7 +49,7 @@ import okhttp3.Response;
 public class LoginTask extends APIRequestTask<User, Object, EntityResult<User>> {
 
     private SubmitEntityListener mStateListener;
-//    changed by namratha
+    //    changed by namratha
     private String otpCode;
 
     public LoginTask(Context ctx, ApiEndpoint api) {
@@ -72,7 +74,7 @@ public class LoginTask extends APIRequestTask<User, Object, EntityResult<User>> 
 
         return result;
     }
-//    changed by namratha
+    //    changed by namratha
     public void setOtpCode(String otpCode) {
         this.otpCode = otpCode;
     }
@@ -164,23 +166,12 @@ public class LoginTask extends APIRequestTask<User, Object, EntityResult<User>> 
 //
 //    }
 
-    private void loginRemotely(User user, EntityResult<User> result){
-        //    changed by namratha
-
-//        User localUser;
-//        try {
-//            localUser = DbHelper.getInstance(ctx).getUser(user.getUsername());
-//        }
-//        catch (UserNotFoundException unfe){
-//            localUser = null;
-//        }
-
+    private void loginRemotely(User user, EntityResult<User> result) {
         try {
-            // update progress dialog
             publishProgress(ctx.getString(R.string.login_process));
             JSONObject json = new JSONObject();
             json.put("phone_number", user.getPhoneNo());
-            json.put("code", otpCode); // use OTP from separate field
+            json.put("code", otpCode); // OTP value
 
             OkHttpClient client = HTTPClientUtils.getClient(ctx);
             Request request = new Request.Builder()
@@ -191,21 +182,64 @@ public class LoginTask extends APIRequestTask<User, Object, EntityResult<User>> 
             Response response = client.newCall(request).execute();
             if (response.isSuccessful()) {
                 JSONObject jsonResp = new JSONObject(response.body().string());
-                user.updateFromJSON(ctx, jsonResp);
-                DbHelper.getInstance(ctx).addOrUpdateUser(user);
-                new MetaDataUtils(ctx).saveMetaData(jsonResp);
-                result.setSuccess(true);
-                result.setResultMessage(ctx.getString(R.string.login_complete));
 
-//                if (localUser != null &&
-//                        localUser.getPasswordEncrypted().equals(user.getPasswordEncrypted())) {
-//                    user.setLocalUser(true);
-//                }
+                // Create a latch to wait for the async call to finish
+                java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
+
+                // Fetch external profile
+                String profileUrl = apiEndpoint.getFullURL(ctx, Paths.EXTERNALPROFILE_PATH);
+                String fullPhoneNumber = user.getPhoneNo();
+
+                ExternalProfileTask.execute(ctx, profileUrl, fullPhoneNumber, new ExternalProfileTask.ExternalProfileCallback() {
+                    @Override
+                    public void onSuccess(JSONObject fullResponse) {
+                        try {
+                            Log.d("ExternalProfile", "Fetched profile: " + fullResponse.toString());
+
+                            String username = fullResponse.optString("username", null);
+                            if (username != null) {
+                                user.setUsername(username);
+                            }
+
+                            user.updateFromJSON(ctx, fullResponse);
+                            DbHelper.getInstance(ctx).addOrUpdateUser(user);
+                            new MetaDataUtils(ctx).saveMetaData(fullResponse);
+
+                            result.setSuccess(true);
+                            result.setResultMessage(ctx.getString(R.string.login_complete));
+                        } catch (Exception e) {
+                            Log.e("ExternalProfile", "Error updating user: ", e);
+                            result.setSuccess(false);
+                            result.setResultMessage("Error processing profile data");
+                        } finally {
+                            latch.countDown();
+                        }
+                    }
+
+                    @Override
+                    public void onNotFound() {
+                        Log.w("ExternalProfile", "Profile not found after login.");
+                        result.setSuccess(false);
+                        result.setResultMessage("Profile not found");
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e("ExternalProfile", "Error fetching profile: " + error);
+                        result.setSuccess(false);
+                        result.setResultMessage("Error fetching profile: " + error);
+                        latch.countDown();
+                    }
+                });
+
+                // Wait for external profile task to finish
+                latch.await();  // This blocks the thread until countDown() is called
 
             } else {
                 if (response.code() == 400 || response.code() == 401) {
                     result.setSuccess(false);
-                    result.setResultMessage(ctx.getString(R.string.error_login));
+                    result.setResultMessage(ctx.getString(R.string.error_invalid_otp));
                 } else {
                     result.setSuccess(false);
                     result.setResultMessage(ctx.getString(R.string.error_connection));
@@ -216,19 +250,11 @@ public class LoginTask extends APIRequestTask<User, Object, EntityResult<User>> 
             Log.d(TAG, "SSLHandshakeException: ", e);
             result.setSuccess(false);
             result.setResultMessage(ctx.getString(R.string.error_connection_ssl));
-        } catch (UnsupportedEncodingException e) {
-            result.setSuccess(false);
-            result.setResultMessage(ctx.getString(R.string.error_connection));
-        } catch (IOException e) {
-            result.setSuccess(false);
-            result.setResultMessage(ctx.getString(R.string.error_connection_required));
-        } catch (JSONException e) {
-            Analytics.logException(e);
-            Log.d(TAG, "JSONException: ", e);
+        } catch (IOException | JSONException | InterruptedException e) {
+            Log.e(TAG, "Login error: ", e);
             result.setSuccess(false);
             result.setResultMessage(ctx.getString(R.string.error_processing_response));
         }
-
     }
 
     @Override

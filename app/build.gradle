@@ -4,8 +4,8 @@ apply plugin: 'com.android.application'
 apply from: '../jacoco.gradle'
 apply from: '../sonarqube.gradle'
 
-def version_code = 122
-def version_name = "7.4.10-noora.1"
+def version_code = 132
+def version_name = "7.4.11-noora.5"
 
 android {
 
@@ -20,7 +20,7 @@ android {
         logger.error('No properties file found. Using default values.')
     }
 
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         versionCode version_code
@@ -29,7 +29,7 @@ android {
         applicationId "org.noorahealth.academy"
 
         minSdk 21
-        targetSdk 34
+        targetSdk 35
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         // The following argument makes the Android Test Orchestrator run its
@@ -358,7 +358,7 @@ dependencies {
     androidTestImplementation 'com.google.dexmaker:dexmaker:1.2'
     androidTestImplementation 'com.google.dexmaker:dexmaker-mockito:1.2'
 
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 
 }
 

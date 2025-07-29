@@ -73,7 +73,7 @@ public class MainActivity extends AppActivity implements BottomNavigationView.On
 
         bindingHeader.btnExpandProfileOptions.setOnClickListener(this);
         bindingHeader.btnEditProfile.setOnClickListener(this);
-        bindingHeader.btnChangePassword.setOnClickListener(this);
+//        bindingHeader.btnChangePassword.setOnClickListener(this);
         bindingHeader.btnLogout.setOnClickListener(this);
 
         binding.navBottomView.setOnNavigationItemSelectedListener(this);
@@ -264,7 +264,7 @@ public class MainActivity extends AppActivity implements BottomNavigationView.On
         }
 
         bindingHeader.btnEditProfile.setVisibility(BuildConfig.MENU_ALLOW_EDIT_PROFILE ? View.VISIBLE : View.GONE);
-        bindingHeader.btnChangePassword.setVisibility(BuildConfig.MENU_ALLOW_CHANGE_PASSWORD ? View.VISIBLE : View.GONE);
+//        bindingHeader.btnChangePassword.setVisibility(BuildConfig.MENU_ALLOW_CHANGE_PASSWORD ? View.VISIBLE : View.GONE);
     }
 
     private void setupProfileOptionsView(boolean visible) {
@@ -322,9 +322,9 @@ public class MainActivity extends AppActivity implements BottomNavigationView.On
                 checkConnectionAndOpenActivity(EditProfileActivity.class);
                 break;
 
-            case R.id.btn_change_password:
-                checkConnectionAndOpenActivity(ChangePasswordActivity.class);
-                break;
+//            case R.id.btn_change_password:
+//                checkConnectionAndOpenActivity(ChangePasswordActivity.class);
+//                break;
 
             case R.id.btn_logout:
                 drawer.logout();

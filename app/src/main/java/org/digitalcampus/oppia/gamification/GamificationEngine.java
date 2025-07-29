@@ -18,6 +18,7 @@
 package org.digitalcampus.oppia.gamification;
 
 import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
 
 import org.digitalcampus.mobile.learning.BuildConfig;
@@ -162,7 +163,8 @@ public class GamificationEngine {
         boolean completed = false;
         DbHelper db = DbHelper.getInstance(this.ctx);
 
-        Media m = activity.getMedia(mediaFileName);
+        Media m = activity.getMedia(Uri.decode(mediaFileName));
+        Log.d(TAG, "Media played: " + m.getFilename());
         if (m != null) {
             try {
                 String criteria = getMediaCompletionCriteriaFromHierarchy();
@@ -273,12 +275,12 @@ public class GamificationEngine {
         }
         if (a != null){
             return ctx.getString(resId,
-                (c == null) ? "" : c.getTitle(prefLang),
-                a.getTitle(prefLang) );
+                    (c == null) ? "" : c.getTitle(prefLang),
+                    a.getTitle(prefLang) );
         }
         else{
             return ctx.getString(resId,
-                (c == null) ? "" : c.getTitle(prefLang));
+                    (c == null) ? "" : c.getTitle(prefLang));
         }
     }
 }

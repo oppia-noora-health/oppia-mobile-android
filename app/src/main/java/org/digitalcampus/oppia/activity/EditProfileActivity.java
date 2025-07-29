@@ -3,6 +3,7 @@ package org.digitalcampus.oppia.activity;
 import android.os.Bundle;
 import android.util.Patterns;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import org.digitalcampus.mobile.learning.R;
@@ -23,7 +24,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-public class EditProfileActivity extends AppActivity implements View.OnClickListener, UpdateProfileTask.ResponseListener {
+//public class EditProfileActivity extends AppActivity implements View.OnClickListener, UpdateProfileTask.ResponseListener {
+public class EditProfileActivity extends AppActivity {
 
     private ActivityEditProfileBinding binding;
     private CustomFieldsUIManager fieldsManager;
@@ -46,16 +48,16 @@ public class EditProfileActivity extends AppActivity implements View.OnClickList
         binding = ActivityEditProfileBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        binding.btnSaveProfile.setOnClickListener(this);
+//        binding.btnSaveProfile.setOnClickListener(this);
 
         getAppComponent().inject(this);
 
         fields = new HashMap<>();
-        fields.put("email", binding.fieldEmail);
-        fields.put("first_name", binding.fieldFirstname);
-        fields.put("last_name", binding.fieldLastname);
-        fields.put("jobtitle", binding.fieldJobtitle);
-        fields.put("organisation", binding.fieldOrganisation);
+//        fields.put("email", binding.fieldEmail);
+//        fields.put("first_name", binding.fieldFirstname);
+//        fields.put("last_name", binding.fieldLastname);
+//        fields.put("jobtitle", binding.fieldJobtitle);
+//        fields.put("organisation", binding.fieldOrganisation);
         fields.put("phoneno", binding.fieldPhoneno);
 
         List<String> requiredFields = customFieldsRepo.getRequiredFields(this);
@@ -71,11 +73,29 @@ public class EditProfileActivity extends AppActivity implements View.OnClickList
         binding.fieldPhoneno.removeView(phoneInput);
         phoneInput.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         binding.fieldPhonenoContainer.addView(phoneInput);
+        binding.registerFormPhonenoEdittext.setEnabled(false);
+        binding.ccp.setCcpClickable(false);
+        binding.ccp.setEnabled(false);
+        binding.ccp.setClickable(false);
+
 
         profileCustomFields = customFieldsRepo.getAll(this);
         fieldsManager = new CustomFieldsUIManager(this, fields, profileCustomFields);
         fieldsManager.populateAndInitializeFields(binding.customFieldsContainer);
 
+        // Disable all dynamically loaded custom fields
+        disableViewGroup(binding.customFieldsContainer);
+
+    }
+
+    private void disableViewGroup(ViewGroup group) {
+        for (int i = 0; i < group.getChildCount(); i++) {
+            View child = group.getChildAt(i);
+            child.setEnabled(false);
+            if (child instanceof ViewGroup) {
+                disableViewGroup((ViewGroup) child);
+            }
+        }
     }
 
     @Override
@@ -101,11 +121,11 @@ public class EditProfileActivity extends AppActivity implements View.OnClickList
 
 
     private void fillUserProfileData() {
-        binding.fieldEmail.setText(user.getEmail());
-        binding.fieldFirstname.setText(user.getFirstname());
-        binding.fieldLastname.setText(user.getLastname());
-        binding.fieldOrganisation.setText(user.getOrganisation());
-        binding.fieldJobtitle.setText(user.getJobTitle());
+//        binding.fieldEmail.setText(user.getEmail());
+//        binding.fieldFirstname.setText(user.getFirstname());
+//        binding.fieldLastname.setText(user.getLastname());
+//        binding.fieldOrganisation.setText(user.getOrganisation());
+//        binding.fieldJobtitle.setText(user.getJobTitle());
         if (user.getPhoneNo()!= null && user.getPhoneNo().startsWith("+")){
             // Check if we already had a number saved with country code
             binding.ccp.setFullNumber(user.getPhoneNo());
@@ -127,73 +147,73 @@ public class EditProfileActivity extends AppActivity implements View.OnClickList
             return true;
         });
 
-        binding.fieldEmail.setCustomValidator(field -> {
-            String email = field.getCleanedValue();
-            if (!TextUtilsJava.isEmpty(email) && !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                binding.fieldEmail.setErrorEnabled(true);
-                binding.fieldEmail.setError(getString(R.string.error_register_email));
-                return false;
-            }
-            return true;
-        });
+//        binding.fieldEmail.setCustomValidator(field -> {
+//            String email = field.getCleanedValue();
+//            if (!TextUtilsJava.isEmpty(email) && !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+//                binding.fieldEmail.setErrorEnabled(true);
+//                binding.fieldEmail.setError(getString(R.string.error_register_email));
+//                return false;
+//            }
+//            return true;
+//        });
 
     }
 
-    @Override
-    public void onClick(View v) {
-        if(v.getId() == R.id.btn_save_profile) {
-            getDataAndSend();
-        }
-    }
+//    @Override
+//    public void onClick(View v) {
+//        if(v.getId() == R.id.btn_save_profile) {
+//            getDataAndSend();
+//        }
+//    }
 
-    private void getDataAndSend() {
+//    private void getDataAndSend() {
 
-        String email = binding.fieldEmail.getCleanedValue();
-        String firstname = binding.fieldFirstname.getCleanedValue();
-        String lastname = binding.fieldLastname.getCleanedValue();
-        String jobTitle = binding.fieldJobtitle.getCleanedValue();
-        String organisation = binding.fieldOrganisation.getCleanedValue();
-        String phoneNo = binding.ccp.getFormattedFullNumber();
+//        String email = binding.fieldEmail.getCleanedValue();
+//        String firstname = binding.fieldFirstname.getCleanedValue();
+//        String lastname = binding.fieldLastname.getCleanedValue();
+//        String jobTitle = binding.fieldJobtitle.getCleanedValue();
+//        String organisation = binding.fieldOrganisation.getCleanedValue();
+//        String phoneNo = binding.ccp.getFormattedFullNumber();
 
-        boolean valid = true;
-        for (ValidableField field : fields.values()){
-            valid = field.validate() && valid;
-        }
-        valid = fieldsManager.validateFields() && valid;
+//        boolean valid = true;
+//        for (ValidableField field : fields.values()){
+//            valid = field.validate() && valid;
+//        }
+//        valid = fieldsManager.validateFields() && valid;
+//
+//        if (valid){
+//            user.setFirstname(firstname);
+//            user.setLastname(lastname);
+//            user.setEmail(email);
+//            user.setJobTitle(jobTitle);
+//            user.setOrganisation(organisation);
+//            user.setPhoneNo(phoneNo);
+//            user.setUserCustomFields(fieldsManager.getCustomFieldValues());
+//            executeUpdateProfileTask(user);
+//        }
+//    }
 
-        if (valid){
-            user.setFirstname(firstname);
-            user.setLastname(lastname);
-            user.setEmail(email);
-            user.setJobTitle(jobTitle);
-            user.setOrganisation(organisation);
-            user.setPhoneNo(phoneNo);
-            user.setUserCustomFields(fieldsManager.getCustomFieldValues());
-            executeUpdateProfileTask(user);
-        }
-    }
-
-    private void executeUpdateProfileTask(final User user) {
-        UpdateProfileTask task = new UpdateProfileTask(this, apiEndpoint);
-        task.setResponseListener(this);
-        task.execute(user);
-    }
+//    private void executeUpdateProfileTask(final User user) {
+//        UpdateProfileTask task = new UpdateProfileTask(this, apiEndpoint);
+//        task.setResponseListener(this);
+//        task.execute(user);
+//    }
 
 
     // Request responses
-    @Override
-    public void onSubmitComplete(User u) {
-        toast(R.string.profile_updated_successfully);
-        finish();
-    }
-
-    @Override
-    public void onSubmitError(String error) {
-        toast(error);
-    }
-
-    @Override
-    public void onConnectionError(String error, User u) {
-        toast(error);
-    }
+//    @Override
+//    public void onSubmitComplete(User u) {
+//        toast(R.string.profile_updated_successfully);
+//        finish();
+//    }
+//
+//    @Override
+//    public void onSubmitError(String error) {
+//        toast(error);
+//    }
+//
+//    @Override
+//    public void onConnectionError(String error, User u) {
+//        toast(error);
+//    }
 }

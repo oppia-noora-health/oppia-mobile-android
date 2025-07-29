@@ -93,15 +93,18 @@
 
         <LinearLayout
             android:id="@+id/btn_change_password"
-            style="@style/MenuItemLayout">
+            style="@style/MenuItemLayout"
+            android:visibility="gone">
 
             <androidx.appcompat.widget.AppCompatImageView
                 style="@style/MenuIcon"
-                app:srcCompat="@drawable/ic_change_pass" />
+                app:srcCompat="@drawable/ic_change_pass"
+                android:visibility="gone" />
 
             <TextView
                 style="@style/TextMenuItem"
-                android:text="@string/change_password" />
+                android:text="@string/change_password"
+                android:visibility="gone"/>
 
         </LinearLayout>
 

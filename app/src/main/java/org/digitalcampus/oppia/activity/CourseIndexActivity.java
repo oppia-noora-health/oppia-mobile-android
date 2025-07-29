@@ -18,6 +18,7 @@
 package org.digitalcampus.oppia.activity;
 
 import android.animation.ValueAnimator;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -29,9 +30,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.AppCompatImageView;
 import androidx.work.Constraints;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
@@ -40,9 +45,12 @@ import androidx.work.WorkManager;
 import org.digitalcampus.mobile.learning.R;
 import org.digitalcampus.mobile.learning.databinding.ActivityCourseIndexBinding;
 import org.digitalcampus.oppia.adapter.CourseIndexRecyclerViewAdapter;
+import org.digitalcampus.oppia.api.ApiEndpoint;
+import org.digitalcampus.oppia.api.Paths;
 import org.digitalcampus.oppia.holder.CompleteCourseHolder;
 import org.digitalcampus.oppia.holder.CourseHolder;
 import org.digitalcampus.oppia.holder.SectionHolder;
+import org.digitalcampus.oppia.listener.APIRequestListener;
 import org.digitalcampus.oppia.model.Activity;
 import org.digitalcampus.oppia.model.CompleteCourse;
 import org.digitalcampus.oppia.model.CompleteCourseProvider;
@@ -51,8 +59,13 @@ import org.digitalcampus.oppia.model.CourseMetaPage;
 import org.digitalcampus.oppia.model.Lang;
 import org.digitalcampus.oppia.model.Section;
 import org.digitalcampus.oppia.service.TrackerWorker;
+import org.digitalcampus.oppia.task.APIUserRequestTask;
 import org.digitalcampus.oppia.task.ParseCourseXMLTask;
+import org.digitalcampus.oppia.task.result.BasicResult;
 import org.digitalcampus.oppia.utils.UIUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,6 +93,8 @@ public class CourseIndexActivity extends AppActivity implements OnSharedPreferen
     private AlertDialog aDialog;
     private ActivityCourseIndexBinding binding;
 
+    @Inject
+    ApiEndpoint apiEndpoint;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -123,6 +138,78 @@ public class CourseIndexActivity extends AppActivity implements OnSharedPreferen
         binding.viewMediaScan.setViewBelow(binding.viewCourseSections);
     }
 
+    private void showBadgeNotification(String message) {
+        LinearLayout badgeLayout = binding.layoutBadgeNotification;
+        TextView badgeMessage = binding.tvBadgeMessage;
+        ImageButton dismissBtn = binding.btnDismissBadge;
+
+        badgeMessage.setText(message);
+        badgeLayout.setVisibility(View.VISIBLE);
+        badgeLayout.setAlpha(0f);
+        badgeLayout.animate()
+                .alpha(1f)
+                .setDuration(500)
+                .start();
+
+        dismissBtn.setOnClickListener(v -> {
+            badgeLayout.animate()
+                    .alpha(0f)
+                    .setDuration(400)
+                    .withEndAction(() -> badgeLayout.setVisibility(View.GONE))
+                    .start();
+        });
+    }
+
+    private void checkNewBadgesAndNotify() {
+        Log.d("BadgeDebug", "Running badge check in CourseIndexActivity");
+        String url = Paths.SERVER_AWARDS_PATH;
+        APIUserRequestTask task = new APIUserRequestTask(this, apiEndpoint);
+
+        task.setAPIRequestListener(new APIRequestListener() {
+            @Override
+            public void apiRequestComplete(BasicResult result) {
+                if (!result.isSuccess()) return;
+
+                try {
+                    JSONObject json = new JSONObject(result.getResultMessage());
+                    JSONArray objects = json.getJSONArray("objects");
+                    int newBadgeCount = objects.length();
+
+                    SharedPreferences prefs = getSharedPreferences("badge_prefs", Context.MODE_PRIVATE);
+                    int previousCount = prefs.getInt("badge_count", 0);
+
+                    if (newBadgeCount > previousCount) {
+                        JSONObject latestBadge = objects.getJSONObject(0);
+                        String description = latestBadge.getString("description");
+                        String message = "🎉 You've have " + description + "!";
+
+                        runOnUiThread(() -> {
+                            if (!isFinishing() && !isDestroyed()) {
+                                showBadgeNotification(message);
+                            }
+                        });
+
+                        prefs.edit().putInt("badge_count", newBadgeCount).apply();
+                    }
+                    else if (!prefs.contains("badge_count")) {
+                        prefs.edit().putInt("badge_count", newBadgeCount).apply();
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void apiKeyInvalidated() {
+                Log.w("BadgesNotify", "API key invalidated while fetching badges.");
+            }
+        });
+
+        task.execute(url);
+    }
+
+
     @Override
     public void onStart() {
         super.onStart();
@@ -155,6 +242,12 @@ public class CourseIndexActivity extends AppActivity implements OnSharedPreferen
         editor.apply();
 
         checkParsedCourse();
+
+        if (!isFinishing() && !isDestroyed()) {
+            checkNewBadgesAndNotify();
+        }
+
+
     }
 
     private void sendTrackers() {

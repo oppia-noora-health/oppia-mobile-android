@@ -44,7 +44,7 @@ public class WelcomeFragment extends AppFragment {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		binding = FragmentWelcomeBinding.inflate(inflater, container, false);
 
-		binding.welcomeRegister.setVisibility(BuildConfig.ALLOW_REGISTER_USER ? View.VISIBLE : View.GONE);
+//		binding.welcomeRegister.setVisibility(BuildConfig.ALLOW_REGISTER_USER ? View.VISIBLE : View.GONE);
 
 		return binding.getRoot();
 	}
@@ -58,10 +58,10 @@ public class WelcomeFragment extends AppFragment {
             wa.switchTab(WelcomeActivity.TAB_LOGIN);
         });
 		
-		binding.welcomeRegister.setOnClickListener(v -> {
-            WelcomeActivity wa = (WelcomeActivity) getActivity();
-            wa.switchTab(WelcomeActivity.TAB_REGISTER);
-        });
+//		binding.welcomeRegister.setOnClickListener(v -> {
+//            WelcomeActivity wa = (WelcomeActivity) getActivity();
+//            wa.switchTab(WelcomeActivity.TAB_REGISTER);
+//        });
 
 		binding.welcomePrivacyInfo.setOnClickListener(v -> {
 			Intent iA = new Intent(getActivity(), PrivacyActivity.class);
