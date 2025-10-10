@@ -35,7 +35,7 @@ public class SendOTPTask {
         try {
             json.put("phone_number", phoneNumber);
             json.put("channel", channel);
-            Log.d("sendotp",phoneNumber+channel);
+            Log.d(TAG, "Sending OTP with phone: " + phoneNumber + ", channel: " + channel);
         } catch (JSONException e) {
             Log.e(TAG, "JSON creation failed", e);
             callback.onError("Invalid data format");
@@ -49,18 +49,34 @@ public class SendOTPTask {
             @Override
             public void onFailure(Call call, IOException e) {
                 Log.e(TAG, "Network error", e);
-                runOnMain(() -> callback.onError("Failed to send OTP"));
+                runOnMain(() -> callback.onError("Network error: " + e.getMessage()));
             }
 
             @Override
-            public void onResponse(Call call, Response response) {
-                runOnMain(() -> {
-                    if (response.isSuccessful()) {
-                        callback.onSuccess();
-                    } else {
-                        callback.onNotFound();
+            public void onResponse(Call call, Response response) throws IOException {
+                String responseStr = response.body() != null ? response.body().string() : "";
+                Log.d(TAG, "Received OTP response: " + responseStr);
+
+                if (response.isSuccessful()) {
+                    runOnMain(callback::onSuccess);
+                } else {
+                    Log.e(TAG, "Server returned error: " + response.code() + " body: " + responseStr);
+
+                    try {
+                        JSONObject errorJson = new JSONObject(responseStr);
+                        // Many OTP APIs return { "error": "message..." }
+                        String errorMessage = errorJson.optString("error", "Server error: " + response.code());
+
+                        // If server explicitly says "not found" you can detect it here
+                        if (errorMessage.toLowerCase().contains("not found")) {
+                            runOnMain(callback::onNotFound);
+                        } else {
+                            runOnMain(() -> callback.onError(errorMessage));
+                        }
+                    } catch (JSONException e) {
+                        runOnMain(() -> callback.onError("Server error: " + response.code()));
                     }
-                });
+                }
             }
 
             private void runOnMain(Runnable r) {

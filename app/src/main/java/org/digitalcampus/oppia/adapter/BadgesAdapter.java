@@ -2,6 +2,7 @@ package org.digitalcampus.oppia.adapter;
 
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,9 +45,15 @@ public class BadgesAdapter extends RecyclerView.Adapter<BadgesAdapter.BadgesView
 
         viewHolder.binding.badgesDescription.setText(badge.getDescription());
         viewHolder.binding.badgesDate.setText(badge.getDateAsString());
-        viewHolder.binding.btnDownloadCertificate.setVisibility(TextUtilsJava.isEmpty(badge.getCertificatePdf())
-                ? View.INVISIBLE : View.VISIBLE);
 
+        String certPdf = badge.getCertificatePdf();
+        Log.d("BadgesAdapter", "Badge: " + badge.getDescription() +
+                ", Certificate: " + certPdf);
+
+        viewHolder.binding.btnDownloadCertificate.setVisibility(View.GONE);
+        if (certPdf != null && !certPdf.trim().isEmpty()) {
+            viewHolder.binding.btnDownloadCertificate.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override

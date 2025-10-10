@@ -703,5 +703,7 @@
     <string name="signup_complete">Signup complete</string>
     <string name="error_signup">Signup failed. Please check your details.</string>
 
+    <string name="widget_quiz_essay_message">Thank you for your reflection and response!</string>
+
 </resources>
 

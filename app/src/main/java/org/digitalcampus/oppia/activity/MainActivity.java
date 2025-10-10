@@ -11,6 +11,10 @@ import android.view.MenuItem;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationItemView;
@@ -75,6 +79,15 @@ public class MainActivity extends AppActivity implements BottomNavigationView.On
         bindingHeader.btnEditProfile.setOnClickListener(this);
 //        bindingHeader.btnChangePassword.setOnClickListener(this);
         bindingHeader.btnLogout.setOnClickListener(this);
+
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.navBottomView, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            // Only apply left/right padding, ignore bottom
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
+            return insets;
+        });
 
         binding.navBottomView.setOnNavigationItemSelectedListener(this);
 

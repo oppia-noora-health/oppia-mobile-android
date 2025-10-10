@@ -28,12 +28,15 @@ public class ExternalProfileTask {
         void onError(String error);
     }
 
-    public static void execute(Context context, String url, String fullPhoneNumber, ExternalProfileCallback callback) {
+    public static void execute(Context context, String url, String fullPhoneNumber, String country, String language, ExternalProfileCallback callback) {
         OkHttpClient client = new OkHttpClient();
         JSONObject json = new JSONObject();
 
         try {
             json.put("phone_number", fullPhoneNumber);
+            json.put("country", country);
+            json.put("language", language);
+            Log.d(TAG, "External profile phone: " + fullPhoneNumber );
         } catch (JSONException e) {
             Log.e(TAG, "JSON Exception while building request", e);
             callback.onError("Failed to build request");
@@ -52,7 +55,7 @@ public class ExternalProfileTask {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                String responseStr = response.body().string();
+                String responseStr = response.body() != null ? response.body().string() : "";
                 Log.d(TAG, "Received response: " + responseStr);
 
                 if (response.isSuccessful()) {
@@ -69,8 +72,16 @@ public class ExternalProfileTask {
                         runOnMain(() -> callback.onError("Invalid JSON"));
                     }
                 } else {
-                    Log.e(TAG, "Server returned error: " + response.code());
-                    runOnMain(() -> callback.onError("Server error: " + response.code()));
+                    Log.e(TAG, "Server returned error: " + response.code() + " body: " + responseStr);
+
+                    try {
+                        JSONObject errorJson = new JSONObject(responseStr);
+                        // Try to extract the "error" field if present
+                        String errorMessage = errorJson.optString("error", "Server error: " + response.code());
+                        runOnMain(() -> callback.onError(errorMessage));
+                    } catch (JSONException e) {
+                        runOnMain(() -> callback.onError("Server error: " + response.code()));
+                    }
                 }
             }
 

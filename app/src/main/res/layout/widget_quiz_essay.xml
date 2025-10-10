@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-			android:orientation="vertical" android:layout_width="match_parent"
-			android:layout_height="match_parent">
-		<EditText android:layout_width="match_parent"
-				android:layout_height="wrap_content" android:gravity="left"
-				android:textSize="20sp" 
-				android:id="@+id/responsetext"
-				android:inputType="textMultiLine"/>
+	android:orientation="vertical"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:padding="16dp">
+
+	<EditText
+		android:id="@+id/responsetext"
+		android:layout_width="match_parent"
+		android:layout_height="150dp"
+		android:gravity="top|start"
+		android:textSize="16sp"
+		android:inputType="textMultiLine"
+		android:background="@android:drawable/edit_text"
+		android:padding="10dp" />
 </LinearLayout>

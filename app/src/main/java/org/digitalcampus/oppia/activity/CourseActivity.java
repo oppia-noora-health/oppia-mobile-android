@@ -495,7 +495,7 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
             // Last activity in section
 //            if (isBaseline) {
             Activity lastActivity = activities.get(currentTab);
-            if (isBaseline || "quiz".equalsIgnoreCase(lastActivity.getActType())) {
+            if (isBaseline || "quiz".equalsIgnoreCase(lastActivity.getActType()) || "feedback".equalsIgnoreCase(lastActivity.getActType())) {
                 // If it's a pre-test section (baseline), don't show the Next Section button
                 binding.nextCourse.setVisibility(View.GONE);
             }  else {

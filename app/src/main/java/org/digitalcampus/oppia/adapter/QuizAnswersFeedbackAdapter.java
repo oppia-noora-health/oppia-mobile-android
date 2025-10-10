@@ -9,10 +9,12 @@ import android.view.ViewGroup;
 import org.digitalcampus.mobile.learning.R;
 import org.digitalcampus.mobile.learning.databinding.RowWidgetQuizFeedbackBinding;
 import org.digitalcampus.mobile.quiz.Quiz;
+import org.digitalcampus.mobile.quiz.model.questiontypes.Essay;
 import org.digitalcampus.oppia.model.QuizAnswerFeedback;
 import org.digitalcampus.oppia.utils.TextUtilsJava;
 import org.digitalcampus.oppia.utils.UIUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -27,7 +29,14 @@ public class QuizAnswersFeedbackAdapter extends RecyclerView.Adapter<QuizAnswers
 
     public QuizAnswersFeedbackAdapter(Context context, List<QuizAnswerFeedback> quizAnswerFeedbacks) {
         this.context = context;
-        this.quizFeedbacks = quizAnswerFeedbacks;
+//        this.quizFeedbacks = quizAnswerFeedbacks;
+
+        this.quizFeedbacks = new ArrayList<>();
+        for (QuizAnswerFeedback qf : quizAnswerFeedbacks) {
+            if (!qf.isEssay()) {
+                this.quizFeedbacks.add(qf);
+            }
+        }
     }
 
     @Override

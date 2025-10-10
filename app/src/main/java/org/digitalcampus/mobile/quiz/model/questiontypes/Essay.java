@@ -26,7 +26,7 @@ public class Essay extends UserResponseQuestion implements Serializable {
 
     @Override
     public void mark(String lang) {
-        this.userscore = 0;
+        this.userscore = 1;
     }
 
     @Override

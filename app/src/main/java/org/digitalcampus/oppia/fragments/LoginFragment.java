@@ -21,6 +21,7 @@ import static org.digitalcampus.oppia.holder.ActivityHolder.getActivity;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -45,6 +46,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.gms.auth.api.phone.SmsRetriever;
+import com.google.android.gms.auth.api.phone.SmsRetrieverClient;
+import com.google.android.gms.tasks.Task;
 import com.hbb20.CountryCodePicker;
 
 import org.digitalcampus.mobile.learning.R;
@@ -53,7 +57,7 @@ import org.digitalcampus.oppia.api.ApiEndpoint;
 import org.digitalcampus.oppia.api.Paths;
 import org.digitalcampus.oppia.listener.SubmitEntityListener;
 import org.digitalcampus.oppia.model.User;
-import org.digitalcampus.oppia.service.OtpSmsReceiver;
+import org.digitalcampus.oppia.service.SmsBroadcastReceiver;
 import org.digitalcampus.oppia.task.ChannelFetchTask;
 import org.digitalcampus.oppia.task.ExternalProfileTask;
 import org.digitalcampus.oppia.task.LoginTask;
@@ -90,7 +94,9 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
     private TextView otpSentTextView;
     private boolean isOtpTimerFinished = false;
     private CountDownTimer countDownTimer;
-    private boolean shouldSendOtpAfterPermission = false;
+
+    private SmsBroadcastReceiver smsReceiver;
+
 
     //    changed by namratha
 //    private FragmentLoginBinding binding;
@@ -128,6 +134,8 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
         languageSpinner = view.findViewById(R.id.spinner_language);
         otpSentTextView = view.findViewById(R.id.text_otp_sent);
         ccp = view.findViewById(R.id.ccp);
+        ccp.setCcpClickable(false); // Prevents clicking to change
+        ccp.setEnabled(false);      // Disables interaction
         setupCountryAndLanguageSpinners();
         // By default show only screen 1
         otpLayout.setVisibility(View.GONE);
@@ -181,6 +189,13 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
         verifyOtpBtn.setEnabled(allFilled);
     }
 
+    private void startSmsRetriever() {
+        SmsRetrieverClient client = SmsRetriever.getClient(requireContext());
+        Task<Void> task = client.startSmsRetriever();
+        task.addOnSuccessListener(aVoid -> Log.d("SMSRetriever", "Started successfully"));
+        task.addOnFailureListener(e -> Log.e("SMSRetriever", "Failed to start", e));
+    }
+
 
 //    changed by namratha
 //    @Override
@@ -213,12 +228,7 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
 
         //    changed by namratha
         sendOtpBtn.setOnClickListener(v -> {
-            if (checkAndRequestPermissions()) {
                 sendOtpWithValidation();
-            } else {
-                // Set the flag so we know user intended to send OTP
-                shouldSendOtpAfterPermission = true;
-            }
         });
 
         resendOtpBtnSms.setOnClickListener( v ->{
@@ -276,7 +286,10 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
 
         String url = apiEndpoint.getFullURL(requireContext(), Paths.EXTERNALPROFILE_PATH);
 
-        ExternalProfileTask.execute(requireContext(), url, fullPhoneNumber, new ExternalProfileTask.ExternalProfileCallback() {
+        String country = countrySpinner.getSelectedItem().toString();
+        String language = languageSpinner.getSelectedItem().toString();
+
+        ExternalProfileTask.execute(requireContext(), url, fullPhoneNumber,country,language, new ExternalProfileTask.ExternalProfileCallback() {
             @Override
             public void onSuccess(JSONObject fullResponse) {
                 sendOtp();
@@ -289,7 +302,7 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
 
             @Override
             public void onError(String error) {
-                UIUtils.showAlert(getActivity(), R.string.error, R.string.error_login);
+                UIUtils.showAlert(getActivity(), R.string.error, error);
             }
         });
     }
@@ -297,51 +310,10 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
 
     @Override
     public void onDestroyView() {
+
         super.onDestroyView();
-    }
-
-    //    changed by namratha
-    private boolean checkAndRequestPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            List<String> permissionsNeeded = new ArrayList<>();
-
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED) {
-                permissionsNeeded.add(Manifest.permission.RECEIVE_SMS);
-            }
-            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
-                permissionsNeeded.add(Manifest.permission.READ_SMS);
-            }
-
-            if (!permissionsNeeded.isEmpty()) {
-                requestPermissions(permissionsNeeded.toArray(new String[0]), PERMISSION_REQUEST_CODE);
-                return false;
-            }
-        }
-        return true;
-    }
-
-    //    changed by namratha
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            boolean allGranted = true;
-            for (int grantResult : grantResults) {
-                if (grantResult != PackageManager.PERMISSION_GRANTED) {
-                    allGranted = false;
-                    break;
-                }
-            }
-            if (allGranted) {
-                Toast.makeText(getActivity(), "Permissions granted.", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(getActivity(), "Permissions denied. Cannot auto-fill OTP.", Toast.LENGTH_LONG).show();
-            }
-
-            //Call this in both cases — to allow OTP to be sent regardless
-            sendOtpWithValidation();
-            shouldSendOtpAfterPermission = false;
+        if ( countDownTimer!= null) {
+            countDownTimer.cancel();
         }
     }
 
@@ -412,6 +384,7 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
             return;
         }
 
+        startSmsRetriever();
         String url = apiEndpoint.getFullURL(requireContext(), Paths.SEND_OTP_PATH);
 
         SendOTPTask.execute(requireContext(), url, fullNumber, channel, new SendOTPTask.SendOtpCallback() {
@@ -435,8 +408,7 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
 
             @Override
             public void onError(String error) {
-                Toast.makeText(getActivity(), "Phone number not found.", Toast.LENGTH_SHORT).show();
-                Toast.makeText(getActivity(), "Please contact your nearest Noora Health team member for Assistance.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), error, Toast.LENGTH_SHORT).show();
                 phoneEditText.setEnabled(true);
                 sendOtpBtn.setEnabled(true);
             }
@@ -514,6 +486,8 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
 
         LoginTask lt = new LoginTask(getActivity(), apiEndpoint);
         lt.setOtpCode(otp);
+        lt.setCountry(countrySpinner.getSelectedItem().toString());
+        lt.setLanguage(languageSpinner.getSelectedItem().toString());
         lt.setLoginListener(this);
         lt.execute(user);
     }
@@ -560,19 +534,29 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
     public void onPause() {
         super.onPause();
         hideProgressDialog();
-        OtpSmsReceiver.setOtpListener(null); // avoid memory leaks
+        if (smsReceiver != null) {
+            requireContext().unregisterReceiver(smsReceiver);
+            smsReceiver = null;
+        }
+
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        OtpSmsReceiver.setOtpListener(new OtpSmsReceiver.OtpListener() {
-            @Override
-            public void onOtpReceived(String otp) {
-                autofillOtp(otp); // your function to set the digits
-            }
-        });
+        smsReceiver = new SmsBroadcastReceiver(this::autofillOtp);
+        IntentFilter filter = new IntentFilter(SmsRetriever.SMS_RETRIEVED_ACTION);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requireContext().registerReceiver(
+                    smsReceiver,
+                    filter,
+                    Context.RECEIVER_NOT_EXPORTED // 👈 only your app can receive
+            );
+        } else {
+            requireContext().registerReceiver(smsReceiver, filter);
+        }
     }
 
     //    changed by namratha

@@ -453,6 +453,25 @@ public abstract class AnswerWidget extends BaseWidget {
         }
         try {
             List<String> answers = currentQuestion.getQuestionResponses(quiz.getCurrentQuestion().getResponseOptions());
+
+            // If current question is Essay, make answer mandatory
+            if (quiz.getCurrentQuestion() instanceof Essay) {
+                // If this is a FeedbackWidget (feedback quiz), answer is optional
+                if (this instanceof FeedbackWidget) {
+                    Log.d("feedback", "Essay answer is optional");
+                    quiz.getCurrentQuestion().setUserResponses(answers);
+                    return true; // Proceed even if no answer given
+                } else {
+                    // For normal essay questions, answer is mandatory
+                    if (answers == null || answers.isEmpty()) {
+                        Log.d("quiz", "Essay answer missing - cannot proceed");
+                        return false; // Stop and ask for input
+                    }
+                    quiz.getCurrentQuestion().setUserResponses(answers);
+                    return true; // Proceed normally
+                }
+            }
+
             if (quiz.getCurrentQuestion().responseExpected() && (answers == null || answers.isEmpty())) {
                 return false;
             }
@@ -472,7 +491,13 @@ public abstract class AnswerWidget extends BaseWidget {
         builder.setTitle(getContext().getString(R.string.feedback));
         builder.setMessage(UIUtils.getFromHtmlAndTrim(msg));
         try {
-            if (quiz.getCurrentQuestion().getScoreAsPercent() >= Quiz.QUIZ_QUESTION_PASS_THRESHOLD) {
+            // If Essay, skip feedback and go straight to next question
+            if (quiz.getCurrentQuestion() instanceof Essay) {
+                nextStep();
+                return;
+            }
+
+            if ( quiz.getCurrentQuestion().getScoreAsPercent() >= Quiz.QUIZ_QUESTION_PASS_THRESHOLD) {
                 builder.setIcon(R.drawable.quiz_tick);
             } else if (quiz.getCurrentQuestion().getScoreAsPercent() > 0) {
                 builder.setIcon(R.drawable.quiz_partially_correct);

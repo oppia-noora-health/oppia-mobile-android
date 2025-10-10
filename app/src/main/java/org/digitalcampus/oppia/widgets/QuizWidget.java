@@ -33,6 +33,7 @@ import org.digitalcampus.mobile.learning.R;
 import org.digitalcampus.mobile.quiz.Quiz;
 import org.digitalcampus.mobile.quiz.model.QuizQuestion;
 import org.digitalcampus.mobile.quiz.model.questiontypes.Description;
+import org.digitalcampus.mobile.quiz.model.questiontypes.Essay;
 import org.digitalcampus.oppia.activity.CourseActivity;
 import org.digitalcampus.oppia.activity.CourseQuizAttemptsActivity;
 import org.digitalcampus.oppia.activity.PrefsActivity;
@@ -135,25 +136,41 @@ public class QuizWidget extends AnswerWidget {
     @Override
     void showResultsInfo() {
         TextView title = getView().findViewById(R.id.quiz_results_score);
-        title.setText(getString(R.string.widget_quiz_results_score, this.getPercentScore()));
+        ViewGroup info = getView().findViewById(R.id.quiz_stats);
 
-        if (!isBaseline){
-            ViewGroup info = getView().findViewById(R.id.quiz_stats);
-            info.setVisibility(View.VISIBLE);
+        if (isEssayQuiz()) {
+            // Hide score
+            title.setVisibility(View.GONE);
 
-            QuizStats stats = attemptsRepository.getQuizAttemptStats(getContext(), course.getCourseId(), activity.getDigest());
-            // We take into account the current quiz (not saved yet)
-            int numAttempts = stats.getNumAttempts();
-            float average = ((stats.getAverageScore() * numAttempts) + quiz.getUserscore()) / (numAttempts + 1);
-            stats.setMaxScore(Math.max(quiz.getMaxscore(), stats.getMaxScore()));
-            stats.setNumAttempts(numAttempts + 1);
-            stats.setUserScore(Math.max(quiz.getUserscore(), stats.getUserScore()));
-            stats.setAverageScore(average);
-            showStats(info, stats);
-        }
+            // Hide stats card
+            info.setVisibility(View.GONE);
 
-        if (!quiz.mustShowQuizResultsAtEnd()) {
-            getView().findViewById(R.id.recycler_quiz_results_feedback).setVisibility(View.GONE);
+            // Show thank you message
+            TextView thankYouMsg = getView().findViewById(R.id.quiz_results_general_feedback);
+            thankYouMsg.setVisibility(View.VISIBLE);
+            thankYouMsg.setText(getString(R.string.widget_quiz_essay_message));
+
+        } else {
+
+            title.setText(getString(R.string.widget_quiz_results_score, this.getPercentScore()));
+
+            if (!isBaseline) {
+                info.setVisibility(View.VISIBLE);
+
+                QuizStats stats = attemptsRepository.getQuizAttemptStats(getContext(), course.getCourseId(), activity.getDigest());
+                // We take into account the current quiz (not saved yet)
+                int numAttempts = stats.getNumAttempts();
+                float average = ((stats.getAverageScore() * numAttempts) + quiz.getUserscore()) / (numAttempts + 1);
+                stats.setMaxScore(Math.max(quiz.getMaxscore(), stats.getMaxScore()));
+                stats.setNumAttempts(numAttempts + 1);
+                stats.setUserScore(Math.max(quiz.getUserscore(), stats.getUserScore()));
+                stats.setAverageScore(average);
+                showStats(info, stats);
+            }
+
+            if (!quiz.mustShowQuizResultsAtEnd()) {
+                getView().findViewById(R.id.recycler_quiz_results_feedback).setVisibility(View.GONE);
+            }
         }
     }
 
@@ -192,6 +209,12 @@ public class QuizWidget extends AnswerWidget {
 
     @Override
     void loadInitialInfo(ViewGroup infoContainer) {
+        if (isEssayQuiz()) {
+            // ✅ Don’t show initial screen, directly move to essay flow
+            checkPasswordProtectionAndShowQuestion();
+            return;
+        }
+
         infoContainer.removeAllViews();
         ViewGroup info = (ViewGroup) View.inflate(infoContainer.getContext(), R.layout.view_quiz_info, infoContainer);
         ProgressBar thresholdBar = info.findViewById(R.id.threshold_bar);
@@ -250,6 +273,12 @@ public class QuizWidget extends AnswerWidget {
                 qf.setScore(q.getScoreAsPercent());
                 qf.setQuestionText(q.getTitle(prefLang));
                 qf.setUserResponse(q.getUserResponses());
+
+                // detect if essay
+                if (q instanceof Essay) {
+                    qf.setEssay(true); // <-- add this method in QuizAnswerFeedback
+                }
+
                 String feedbackText = q.getFeedback(prefLang);
                 qf.setFeedbackText(feedbackText.replace("&amp;gt;","<"));
                 quizAnswersFeedback.add(qf);
@@ -259,5 +288,16 @@ public class QuizWidget extends AnswerWidget {
         recyclerQuestionFeedbackLV.setAdapter(adapterQuizFeedback);
     }
 
+    private boolean isEssayQuiz() {
+        List<QuizQuestion> questions = quiz.getQuestions();
+        if (questions == null || questions.isEmpty()) return false;
 
+        // Only true if ALL questions are essay
+        for (QuizQuestion q : questions) {
+            if (!(q instanceof Essay)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

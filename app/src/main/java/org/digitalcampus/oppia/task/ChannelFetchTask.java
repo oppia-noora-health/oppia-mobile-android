@@ -47,12 +47,12 @@ public class ChannelFetchTask {
             @Override
             public void onFailure(Call call, IOException e) {
                 Log.e(TAG, "Network error", e);
-                runOnMain(() -> callback.onError("Failed to fetch channels"));
+                runOnMain(() -> callback.onError("Network error: " + e.getMessage()));
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                String responseStr = response.body().string();
+                String responseStr = response.body() != null ? response.body().string() : "";
                 Log.d(TAG, "Channel response: " + responseStr);
 
                 if (response.isSuccessful()) {
@@ -65,8 +65,8 @@ public class ChannelFetchTask {
 
                         for (int i = 0; i < channels.length(); i++) {
                             JSONObject ch = channels.getJSONObject(i);
-                            String name = ch.getString("name");
-                            String id = ch.getString("id");
+                            String name = ch.optString("name", "");
+                            String id = ch.optString("id", "");
 
                             if ("SMS".equalsIgnoreCase(name) && "sms".equalsIgnoreCase(id)) {
                                 showSmsButton = true;
@@ -85,7 +85,15 @@ public class ChannelFetchTask {
                         runOnMain(() -> callback.onError("Failed to parse channel response"));
                     }
                 } else {
-                    runOnMain(() -> callback.onError("Error fetching channels: " + response.code()));
+                    Log.e(TAG, "Server returned error: " + response.code() + " body: " + responseStr);
+
+                    try {
+                        JSONObject errorJson = new JSONObject(responseStr);
+                        String errorMessage = errorJson.optString("error", "Error fetching channels: " + response.code());
+                        runOnMain(() -> callback.onError(errorMessage));
+                    } catch (JSONException e) {
+                        runOnMain(() -> callback.onError("Error fetching channels: " + response.code()));
+                    }
                 }
             }
 

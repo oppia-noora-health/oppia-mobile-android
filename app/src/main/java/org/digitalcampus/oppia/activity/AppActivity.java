@@ -27,6 +27,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -35,12 +36,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsets;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AnticipateInterpolator;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.graphics.Insets;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -108,6 +114,25 @@ public class AppActivity extends AppCompatActivity implements APIKeyRequestListe
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Disable decor fitting system windows so we handle insets manually
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+        // Find the root content view of the activity
+        View content = findViewById(android.R.id.content);
+
+        if (content != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+                // Apply padding to avoid overlap with status & navigation bar
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+
+                // Let the insets pass through
+                return insets;
+            });
+        }
+
         initializeDaggerBase();
     }
 
@@ -388,8 +413,16 @@ public class AppActivity extends AppCompatActivity implements APIKeyRequestListe
             tvGamificationMessage.setText(message);
             tvGamificationPoints.setText(String.valueOf(points));
 
+            // reset any automatic inset/padding
+            ViewCompat.setOnApplyWindowInsetsListener(layout, (v, insets) -> insets);
+
+            // also clear layout paddings
+            layout.setPadding(0, 0, 0, 0);
+
             //If the view is not covering the whole snackbar layout, add this line
             layout.setPaddingRelative(0, 0, 0, 0);
+
+
 
             layout.addView(snackView, 0);
             layout.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent));

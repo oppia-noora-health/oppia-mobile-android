@@ -51,6 +51,8 @@ public class LoginTask extends APIRequestTask<User, Object, EntityResult<User>> 
     private SubmitEntityListener mStateListener;
     //    changed by namratha
     private String otpCode;
+    private String country;
+    private String language;
 
     public LoginTask(Context ctx, ApiEndpoint api) {
         super(ctx, api);
@@ -77,6 +79,14 @@ public class LoginTask extends APIRequestTask<User, Object, EntityResult<User>> 
     //    changed by namratha
     public void setOtpCode(String otpCode) {
         this.otpCode = otpCode;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     private void loginLocalOfflineUser(User user, EntityResult<User> result){
@@ -190,7 +200,7 @@ public class LoginTask extends APIRequestTask<User, Object, EntityResult<User>> 
                 String profileUrl = apiEndpoint.getFullURL(ctx, Paths.EXTERNALPROFILE_PATH);
                 String fullPhoneNumber = user.getPhoneNo();
 
-                ExternalProfileTask.execute(ctx, profileUrl, fullPhoneNumber, new ExternalProfileTask.ExternalProfileCallback() {
+                ExternalProfileTask.execute(ctx, profileUrl, fullPhoneNumber, country , language, new ExternalProfileTask.ExternalProfileCallback() {
                     @Override
                     public void onSuccess(JSONObject fullResponse) {
                         try {

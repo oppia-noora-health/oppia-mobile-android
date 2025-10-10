@@ -4,8 +4,8 @@ apply plugin: 'com.android.application'
 apply from: '../jacoco.gradle'
 apply from: '../sonarqube.gradle'
 
-def version_code = 132
-def version_name = "7.4.11-noora.5"
+def version_code = 144
+def version_name = "7.4.11-noora.17"
 
 android {
 
@@ -359,6 +359,8 @@ dependencies {
     androidTestImplementation 'com.google.dexmaker:dexmaker-mockito:1.2'
 
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
 
 }
 

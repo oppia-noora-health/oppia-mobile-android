@@ -9,6 +9,22 @@
       "type":"str"
     },
     {
+      "name":"country",
+      "label":"Country",
+      "order":8,
+      "required":false,
+      "helper_text":"",
+      "type":"str"
+    },
+    {
+      "name":"language",
+      "label":"Language",
+      "order":8,
+      "required":false,
+      "helper_text":"",
+      "type":"str"
+    },
+    {
       "name":"regency",
       "label":"Regency/District",
       "order":8,
@@ -88,6 +104,8 @@
       "helper_text":"Information provided from the server for the given number",
       "fields":[
         "name",
+        "country",
+        "language",
         "regency",
         "facility",
         "designation",

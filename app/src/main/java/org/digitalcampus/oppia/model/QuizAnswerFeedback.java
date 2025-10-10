@@ -28,6 +28,7 @@ public class QuizAnswerFeedback {
 	private String feedbackText;
 	private List<String> userResponse;
 	private boolean isSurvey;
+	private boolean isEssay = false;
 	
 	public float getScore() {
 		return score;
@@ -60,5 +61,13 @@ public class QuizAnswerFeedback {
 
 	public void setIsSurvey(boolean survey) {
 		isSurvey = survey;
+	}
+
+	public void setEssay(boolean essay) {
+		this.isEssay = essay;
+	}
+
+	public boolean isEssay() {
+		return isEssay;
 	}
 }
