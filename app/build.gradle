@@ -4,8 +4,8 @@ apply plugin: 'com.android.application'
 apply from: '../jacoco.gradle'
 apply from: '../sonarqube.gradle'
 
-def version_code = 144
-def version_name = "7.4.11-noora.17"
+def version_code = 151
+def version_name = "7.4.11-noora.24"
 
 android {
 
@@ -362,6 +362,11 @@ dependencies {
 
     implementation 'com.google.android.gms:play-services-auth:20.7.0'
 
+    // Balloon tooltip
+    implementation "com.github.skydoves:balloon:1.5.3"
+
+    // Lottie animations
+    implementation "com.airbnb.android:lottie:6.1.0"
 }
 
 

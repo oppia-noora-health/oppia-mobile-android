@@ -1397,7 +1397,8 @@ public class DbHelper extends SQLiteOpenHelper {
     public List<QuizAttempt> getGlobalQuizAttempts(long userId, String prefLang) {
 
         // find if attempted
-        String s1 = QUIZATTEMPTS_C_USERID + STR_EQUALS_AND + QUIZATTEMPTS_C_TYPE + "=?";
+//        String s1 = QUIZATTEMPTS_C_USERID + STR_EQUALS_AND + QUIZATTEMPTS_C_TYPE + "=?";
+        String s1 = QUIZATTEMPTS_C_USERID + "=? AND (" + QUIZATTEMPTS_C_TYPE + "=? OR " + QUIZATTEMPTS_C_TYPE + " IS NULL)";
         String order = QUIZATTEMPTS_C_DATETIME + " " + DESC;
         String[] args1 = new String[]{String.valueOf(userId), QuizAttempt.TYPE_QUIZ};
         Cursor c = db.query(QUIZATTEMPTS_TABLE, null, s1, args1, null, null, order);

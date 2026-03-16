@@ -42,6 +42,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
@@ -176,95 +177,212 @@ public class DownloadService extends FileIntentService {
         unregisterReceiver(alternativeNotifier);
     }
 
-    private void downloadFile(String fileUrl, String filename, String fileDigest){
+    private OkHttpClient getDownloadClient() {
+        return new OkHttpClient.Builder()
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(0, TimeUnit.SECONDS)
+                .writeTimeout(0, TimeUnit.SECONDS)
+                .retryOnConnectionFailure(true)
+                .build();
+    }
+
+
+//    private void downloadFile(String fileUrl, String filename, String fileDigest){
+//
+//        File downloadedFile = null;
+//        FileOutputStream f = null;
+//
+//        try {
+//            URL url = new URL(fileUrl);
+//            //If no filename was passed, we set the filename based on the URL
+//            if (filename == null){ filename = url.getPath().substring(url.getPath().lastIndexOf('/')+1); }
+//            downloadedFile = new File(Storage.getMediaPath(this), filename);
+//
+//            OkHttpClient client = HTTPClientUtils.getClient(this);
+//            Request request = new Request.Builder().url(fileUrl).build();
+//            Response response = client.newCall(request).execute();
+//            long fileLength = response.body().contentLength();
+//            long availableStorage = Storage.getAvailableStorageSize(this);
+//
+//            if (fileLength >= availableStorage){
+//                sendBroadcast(fileUrl, ACTION_FAILED, this.getString(R.string.error_insufficient_storage_available));
+//                removeDownloading(fileUrl);
+//                return;
+//            }
+//
+//            f = new FileOutputStream(downloadedFile);
+//            InputStream in = response.body().byteStream();
+//
+//            MessageDigest mDigest = MessageDigest.getInstance("MD5");
+//            in = new DigestInputStream(in, mDigest);
+//
+//            byte[] buffer = new byte[8192];
+//            int len1;
+//            long total = 0;
+//            int previousProgress = 0;
+//            int progress;
+//            while ((len1 = in.read(buffer)) > 0) {
+//                //If received a cancel action while downloading, stop it
+//                if (isCancelled(fileUrl)) {
+//                    Log.d(TAG, "Media " + filename + " cancelled while downloading. Deleting temp file...");
+//                    f.close();
+//                    in.close();
+//                    deleteFile(downloadedFile);
+//                    removeCancelled(fileUrl);
+//                    removeDownloading(fileUrl);
+//                    return;
+//                }
+//
+//                total += len1;
+//                progress = (int)((total*100)/fileLength);
+//                if (progress > previousProgress){
+//                    sendBroadcast(fileUrl, ACTION_DOWNLOAD, ""+progress);
+//                    previousProgress = progress;
+//                }
+//                f.write(buffer, 0, len1);
+//            }
+//            in.close();
+//            if (fileDigest != null){
+//                // check the file digest matches, otherwise delete the file
+//                // (it's either been a corrupted download or it's the wrong file)
+//                String md5Digest = FileUtils.getDigestFromMessage(mDigest);
+//                if(md5Digest.contains(fileDigest)) {
+//                    sendBroadcast(fileUrl, ACTION_COMPLETE, null);
+//                }
+//                else {
+//                    this.deleteFile(downloadedFile);
+//                    sendBroadcast(fileUrl, ACTION_FAILED, this.getString(R.string.error_media_download));
+//                    removeDownloading(fileUrl);
+//                }
+//            }
+//
+//        } catch (MalformedURLException|NoSuchAlgorithmException e) {
+//            Analytics.logException(e);
+//            logAndNotifyError(fileUrl, e);
+//        } catch (IOException e) {
+//            this.deleteFile(downloadedFile);
+//            logAndNotifyError(fileUrl, e);
+//        } finally {
+//            if (f != null){
+//               try {
+//                    f.close();
+//               } catch (IOException ioe) {
+//                   Log.d(TAG, "couldn't close FileOutputStream object", ioe);
+//               }
+//            }
+//        }
+//
+//        Log.d(TAG, fileUrl + " process completed");
+//        removeDownloading(fileUrl);
+//    }
+
+    private void downloadFile(String fileUrl, String filename, String fileDigest) {
 
         File downloadedFile = null;
-        FileOutputStream f = null;
 
         try {
             URL url = new URL(fileUrl);
-            //If no filename was passed, we set the filename based on the URL
-            if (filename == null){ filename = url.getPath().substring(url.getPath().lastIndexOf('/')+1); }
-            downloadedFile = new File(Storage.getMediaPath(this), filename);
 
-            OkHttpClient client = HTTPClientUtils.getClient(this);
-            Request request = new Request.Builder().url(fileUrl).build();
-            Response response = client.newCall(request).execute();
-            long fileLength = response.body().contentLength();
-            long availableStorage = Storage.getAvailableStorageSize(this);
-
-            if (fileLength >= availableStorage){
-                sendBroadcast(fileUrl, ACTION_FAILED, this.getString(R.string.error_insufficient_storage_available));
-                removeDownloading(fileUrl);
-                return;
+            if (filename == null) {
+                filename = url.getPath()
+                        .substring(url.getPath().lastIndexOf('/') + 1);
             }
 
-            f = new FileOutputStream(downloadedFile);
-            InputStream in = response.body().byteStream();
+            downloadedFile = new File(Storage.getMediaPath(this), filename);
 
-            MessageDigest mDigest = MessageDigest.getInstance("MD5");
-            in = new DigestInputStream(in, mDigest);
+            OkHttpClient client = getDownloadClient();
 
-            byte[] buffer = new byte[8192];
-            int len1;
-            long total = 0;
-            int previousProgress = 0;
-            int progress;
-            while ((len1 = in.read(buffer)) > 0) {
-                //If received a cancel action while downloading, stop it
-                if (isCancelled(fileUrl)) {
-                    Log.d(TAG, "Media " + filename + " cancelled while downloading. Deleting temp file...");
-                    f.close();
-                    in.close();
-                    deleteFile(downloadedFile);
-                    removeCancelled(fileUrl);
+            Request request = new Request.Builder()
+                    .url(fileUrl)
+                    .header("Accept-Encoding", "identity")
+                    .build();
+
+            try (Response response = client.newCall(request).execute()) {
+
+                if (!response.isSuccessful() || response.body() == null) {
+                    sendBroadcast(fileUrl, ACTION_FAILED,
+                            getString(R.string.error_media_download));
                     removeDownloading(fileUrl);
                     return;
                 }
 
-                total += len1;
-                progress = (int)((total*100)/fileLength);
-                if (progress > previousProgress){
-                    sendBroadcast(fileUrl, ACTION_DOWNLOAD, ""+progress);
-                    previousProgress = progress;
-                }
-                f.write(buffer, 0, len1);
-            }
-            in.close();
-            if (fileDigest != null){
-                // check the file digest matches, otherwise delete the file
-                // (it's either been a corrupted download or it's the wrong file)
-                String md5Digest = FileUtils.getDigestFromMessage(mDigest);
-                if(md5Digest.contains(fileDigest)) {
-                    sendBroadcast(fileUrl, ACTION_COMPLETE, null);
-                }
-                else {
-                    this.deleteFile(downloadedFile);
-                    sendBroadcast(fileUrl, ACTION_FAILED, this.getString(R.string.error_media_download));
+                long fileLength = response.body().contentLength();
+                long availableStorage = Storage.getAvailableStorageSize(this);
+
+                if (fileLength > 0 && fileLength >= availableStorage) {
+                    sendBroadcast(fileUrl, ACTION_FAILED,
+                            getString(R.string.error_insufficient_storage_available));
                     removeDownloading(fileUrl);
+                    return;
                 }
+
+                MessageDigest mDigest = MessageDigest.getInstance("MD5");
+
+                try (InputStream rawIn = response.body().byteStream();
+                     DigestInputStream in = new DigestInputStream(rawIn, mDigest);
+                     FileOutputStream out = new FileOutputStream(downloadedFile)) {
+
+                    byte[] buffer = new byte[8192];
+                    int read;
+                    long total = 0;
+                    int previousProgress = 0;
+
+                    while ((read = in.read(buffer)) != -1) {
+
+                        if (isCancelled(fileUrl)) {
+                            Log.d(TAG, "Media " + filename + " cancelled. Deleting file.");
+                            deleteFile(downloadedFile);
+                            removeCancelled(fileUrl);
+                            removeDownloading(fileUrl);
+                            return;
+                        }
+
+                        out.write(buffer, 0, read);
+                        total += read;
+
+                        if (fileLength > 0) {
+                            int progress = (int) ((total * 100) / fileLength);
+                            if (progress > previousProgress) {
+                                sendBroadcast(fileUrl, ACTION_DOWNLOAD,
+                                        String.valueOf(progress));
+                                previousProgress = progress;
+                            }
+                        }
+                    }
+
+                    out.flush();
+                }
+
+                // MD5 validation AFTER stream closed
+                if (fileDigest != null) {
+                    String md5Digest = FileUtils.getDigestFromMessage(mDigest);
+                    if (!md5Digest.contains(fileDigest)) {
+                        deleteFile(downloadedFile);
+                        sendBroadcast(fileUrl, ACTION_FAILED,
+                                getString(R.string.error_media_download));
+                        removeDownloading(fileUrl);
+                        return;
+                    }
+                }
+
+                sendBroadcast(fileUrl, ACTION_COMPLETE, null);
+
             }
 
-        } catch (MalformedURLException|NoSuchAlgorithmException e) {
+        } catch (MalformedURLException | NoSuchAlgorithmException e) {
             Analytics.logException(e);
             logAndNotifyError(fileUrl, e);
+
         } catch (IOException e) {
-            this.deleteFile(downloadedFile);
-            logAndNotifyError(fileUrl, e);
-        } finally {
-            if (f != null){
-               try {
-                    f.close();
-               } catch (IOException ioe) {
-                   Log.d(TAG, "couldn't close FileOutputStream object", ioe);
-               }
+            if (downloadedFile != null) {
+                deleteFile(downloadedFile);
             }
+            logAndNotifyError(fileUrl, e);
         }
 
         Log.d(TAG, fileUrl + " process completed");
         removeDownloading(fileUrl);
     }
-
 
     private void deleteFile(File file){
         if ((file != null) && file.exists() && !file.isDirectory()){

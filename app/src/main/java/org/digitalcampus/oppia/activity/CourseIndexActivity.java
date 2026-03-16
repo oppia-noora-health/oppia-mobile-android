@@ -23,7 +23,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -57,12 +60,14 @@ import org.digitalcampus.oppia.model.CompleteCourseProvider;
 import org.digitalcampus.oppia.model.Course;
 import org.digitalcampus.oppia.model.CourseMetaPage;
 import org.digitalcampus.oppia.model.Lang;
+import org.digitalcampus.oppia.model.Media;
 import org.digitalcampus.oppia.model.Section;
 import org.digitalcampus.oppia.service.TrackerWorker;
 import org.digitalcampus.oppia.task.APIUserRequestTask;
 import org.digitalcampus.oppia.task.ParseCourseXMLTask;
 import org.digitalcampus.oppia.task.result.BasicResult;
 import org.digitalcampus.oppia.utils.UIUtils;
+import org.digitalcampus.oppia.utils.ui.MediaTourManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -247,8 +252,27 @@ public class CourseIndexActivity extends AppActivity implements OnSharedPreferen
             checkNewBadgesAndNotify();
         }
 
-
+        new Handler(Looper.getMainLooper()).postDelayed(() -> checkAndStartDownloadTour(), 400);
     }
+
+    private void checkAndStartDownloadTour() {
+        // Ensure the media scan view exists in the current layout
+        View mediaScanView = findViewById(R.id.view_media_scan);
+        if (mediaScanView != null && mediaScanView.getVisibility() == View.VISIBLE) {
+            View downloadButton = mediaScanView.findViewById(R.id.btn_media_download);
+            if (downloadButton != null) {
+                // Add slight delay to ensure layout is completely drawn before tooltip shows
+                downloadButton.postDelayed(() -> {
+                    MediaTourManager mediaTour = new MediaTourManager(CourseIndexActivity.this);
+                    mediaTour.startDownloadButtonTour(downloadButton);
+                }, 300);
+            }
+        } else {
+            // In case view_media_scan becomes visible later (e.g., after async load)
+            new Handler(Looper.getMainLooper()).postDelayed(this::checkAndStartDownloadTour, 800);
+        }
+    }
+
 
     private void sendTrackers() {
 
@@ -463,7 +487,12 @@ public class CourseIndexActivity extends AppActivity implements OnSharedPreferen
         } else if ((course.getSequencingMode().equals(Course.SEQUENCING_MODE_SECTION))
                 && (!previousActivitiesCompleted)) {
             UIUtils.showAlert(this, R.string.sequencing_dialog_title, R.string.sequencing_section_message);
-        } else {
+        } else if ((course.getSequencingMode().equals(Course.SEQUENCING_MODE_THROUGH_SECTIONS))
+                && (!previousSectionsCompleted)) {
+            UIUtils.showAlert(this, R.string.sequencing_through_section_message_dialog_title,
+                    R.string.sequencing_through_section_message);
+        }
+        else {
             CourseHolder.setCourse(course);
             SectionHolder.setSection(s);
             Intent intent = new Intent(this, CourseActivity.class);

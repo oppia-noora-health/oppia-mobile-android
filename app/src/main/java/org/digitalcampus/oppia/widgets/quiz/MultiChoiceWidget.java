@@ -39,10 +39,12 @@ public class MultiChoiceWidget extends QuestionWidget {
     public static final String TAG = MultiChoiceWidget.class.getSimpleName();
 
     private QuizQuestion question;
+    private Boolean isFeedback;
 
-    public MultiChoiceWidget(Activity activity, View v, ViewGroup container, QuizQuestion q) {
+    public MultiChoiceWidget(Activity activity, View v, ViewGroup container, QuizQuestion q, Boolean isFeedback) {
         super(activity, v, container, R.layout.widget_quiz_multichoice);
         this.question = q;
+        this.isFeedback = isFeedback;
     }
 
     @Override
@@ -72,17 +74,33 @@ public class MultiChoiceWidget extends QuestionWidget {
         int id = 1000 + 1;
         for (Response r : responses) {
 
-            RadioButton rb = new RadioButton(ctx, null, 0, R.style.QuizCheckableItem);
-
-            RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            setResponseMarginInLayoutParams(params);
-            rb.setId(id);
-            rb.setText(UIUtils.getFromHtmlAndTrim(r.getTitle(currentUserLang)));
-            responsesRG.addView(rb, params);
-            for (String answer : currentAnswer) {
-                if (answer.equals(r.getTitle(currentUserLang))) {
-                    rb.setChecked(true);
+            if(isFeedback)
+            {
+                RadioButton rb = new RadioButton(ctx, null, 0, R.style.FeedbackCheckableItem);
+                RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                setResponseMarginInLayoutParams(params);
+                rb.setId(id);
+                rb.setText(UIUtils.getFromHtmlAndTrim(r.getTitle(currentUserLang)));
+                responsesRG.addView(rb, params);
+                for (String answer : currentAnswer) {
+                    if (answer.equals(r.getTitle(currentUserLang))) {
+                        rb.setChecked(true);
+                    }
+                }
+            }
+            else {
+                RadioButton rb = new RadioButton(ctx, null, 0, R.style.QuizCheckableItem);
+                RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                setResponseMarginInLayoutParams(params);
+                rb.setId(id);
+                rb.setText(UIUtils.getFromHtmlAndTrim(r.getTitle(currentUserLang)));
+                responsesRG.addView(rb, params);
+                for (String answer : currentAnswer) {
+                    if (answer.equals(r.getTitle(currentUserLang))) {
+                        rb.setChecked(true);
+                    }
                 }
             }
             id++;

@@ -372,7 +372,8 @@ class CourseXMLHandler extends DefaultLexicalHandler implements IMediaXMLHandler
         c.setGamification(courseGamification);
 
         if ((courseSequencingMode!=null) && (courseSequencingMode.equals(Course.SEQUENCING_MODE_COURSE) ||
-                courseSequencingMode.equals(Course.SEQUENCING_MODE_SECTION) || courseSequencingMode.equals(Course.SEQUENCING_MODE_NONE))){
+                courseSequencingMode.equals(Course.SEQUENCING_MODE_SECTION) || courseSequencingMode.equals(Course.SEQUENCING_MODE_NONE) ||
+                courseSequencingMode.equals(Course.SEQUENCING_MODE_THROUGH_SECTIONS))){
             c.setSequencingMode(courseSequencingMode);
         }
 

@@ -1,20 +1,3 @@
-/*
- * This file is part of OppiaMobile - https://digital-campus.org/
- *
- * OppiaMobile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * OppiaMobile is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with OppiaMobile. If not, see <http://www.gnu.org/licenses/>.
- */
-
 package org.digitalcampus.oppia.widgets;
 
 import android.content.Intent;
@@ -22,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -45,6 +29,7 @@ import org.digitalcampus.oppia.model.Activity;
 import org.digitalcampus.oppia.model.Course;
 import org.digitalcampus.oppia.model.QuizAnswerFeedback;
 import org.digitalcampus.oppia.model.QuizStats;
+import org.digitalcampus.oppia.utils.ui.QuizTourManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,43 +51,27 @@ public class QuizWidget extends AnswerWidget {
         return myFragment;
     }
 
-    public QuizWidget() {
-        // Required empty public constructor
-    }
+    public QuizWidget() { }
 
     @Override
     int getContentAvailability(boolean afterAttempt) {
-
         if (isUserOverLimitedAttempts(afterAttempt)){
             return R.string.widget_quiz_unavailable_attempts;
         }
-        // determine availability
-        if (this.quiz.getAvailability() == Quiz.AVAILABILITY_ALWAYS){
-            return QUIZ_AVAILABLE;
-        } else if (this.quiz.getAvailability() == Quiz.AVAILABILITY_SECTION){
-            // check to see if all previous section activities have been completed
-            DbHelper db = DbHelper.getInstance(getActivity());
-            long userId = db.getUserId(SessionManager.getUsername(getActivity()));
+        DbHelper db = DbHelper.getInstance(getActivity());
+        long userId = db.getUserId(SessionManager.getUsername(getActivity()));
 
-            if( db.isPreviousSectionActivitiesCompleted(activity, userId) )
+        switch (this.quiz.getAvailability()) {
+            case Quiz.AVAILABILITY_ALWAYS:
                 return QUIZ_AVAILABLE;
-            else
-                return R.string.widget_quiz_unavailable_section;
-
-        } else if (this.quiz.getAvailability() == Quiz.AVAILABILITY_COURSE){
-            // check to see if all previous course activities have been completed
-            DbHelper db = DbHelper.getInstance(getActivity());
-            long userId = db.getUserId(SessionManager.getUsername(getActivity()));
-            if (db.isPreviousCourseActivitiesCompleted(activity, userId))
+            case Quiz.AVAILABILITY_SECTION:
+                return db.isPreviousSectionActivitiesCompleted(activity, userId) ? QUIZ_AVAILABLE : R.string.widget_quiz_unavailable_section;
+            case Quiz.AVAILABILITY_COURSE:
+                return db.isPreviousCourseActivitiesCompleted(activity, userId) ? QUIZ_AVAILABLE : R.string.widget_quiz_unavailable_course;
+            default:
                 return QUIZ_AVAILABLE;
-            else
-                return R.string.widget_quiz_unavailable_course;
         }
-        //If none of the conditions apply, set it as available
-        return QUIZ_AVAILABLE;
     }
-
-
 
     @Override
     String getAnswerWidgetType() {
@@ -112,7 +81,6 @@ public class QuizWidget extends AnswerWidget {
     @Override
     protected void showContentUnavailableRationale(String unavailabilityReasonString) {
         super.showContentUnavailableRationale(unavailabilityReasonString);
-
         QuizStats quizStats = attemptsRepository.getQuizAttemptStats(getActivity(), course.getCourseId(), activity.getDigest());
         quizStats.setQuizTitle(activity.getTitle(prefLang));
         if (quizStats.isAttempted()) {
@@ -172,6 +140,11 @@ public class QuizWidget extends AnswerWidget {
                 getView().findViewById(R.id.recycler_quiz_results_feedback).setVisibility(View.GONE);
             }
         }
+
+        // Start Result Tour (only once)
+        if (!isBaseline) {
+            startResultTour();
+        }
     }
 
     @Override
@@ -227,7 +200,10 @@ public class QuizWidget extends AnswerWidget {
         String currentLang = prefs.getString(PrefsActivity.PREF_CONTENT_LANGUAGE, Locale.getDefault().getLanguage());
         tvTitle.setText(quiz.getTitle(currentLang));
 
-        info.findViewById(R.id.take_quiz_btn).setOnClickListener(view -> checkPasswordProtectionAndShowQuestion());
+        info.findViewById(R.id.take_quiz_btn).setOnClickListener(view -> {
+            checkPasswordProtectionAndShowQuestion();
+        });
+
         QuizStats stats = attemptsRepository.getQuizAttemptStats(getContext(), course.getCourseId(), activity.getDigest());
         showStats(info, stats);
     }
@@ -238,7 +214,6 @@ public class QuizWidget extends AnswerWidget {
         baselineText.setText(getString(R.string.widget_quiz_baseline_completed));
         baselineText.setVisibility(View.VISIBLE);
     }
-
 
     @Override
     public boolean getActivityCompleted() {
@@ -291,13 +266,37 @@ public class QuizWidget extends AnswerWidget {
     private boolean isEssayQuiz() {
         List<QuizQuestion> questions = quiz.getQuestions();
         if (questions == null || questions.isEmpty()) return false;
-
-        // Only true if ALL questions are essay
-        for (QuizQuestion q : questions) {
-            if (!(q instanceof Essay)) {
-                return false;
-            }
-        }
+        for (QuizQuestion q : questions) if (!(q instanceof Essay)) return false;
         return true;
     }
+
+    private void startResultTour() {
+        View root = getView();
+        if (root == null) return;
+
+        View resultContainer = root.findViewById(R.id.widget_quiz_results);
+        if (resultContainer == null) return;
+
+        Button retakeBtn = resultContainer.findViewById(R.id.quiz_results_button);
+        Button continueBtn = resultContainer.findViewById(R.id.quiz_exit_button);
+
+        if (retakeBtn == null || continueBtn == null) {
+            // Retry if buttons not ready
+            resultContainer.postDelayed(this::startResultTour, 300);
+            return;
+        }
+
+        // Wait for first button to be laid out
+        retakeBtn.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                retakeBtn.getViewTreeObserver().removeOnPreDrawListener(this);
+
+                QuizTourManager tourManager = new QuizTourManager(getActivity());
+                tourManager.startResultTourIfFirstLaunch(resultContainer, retakeBtn, continueBtn);
+                return true;
+            }
+        });
+    }
+
 }

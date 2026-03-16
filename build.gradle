@@ -4,10 +4,12 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
 
+        // Gradle plugins repo
+        maven { url "https://plugins.gradle.org/m2/" }
+
+        // Jitpack repo
+        maven { url "https://jitpack.io" }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.5.2'

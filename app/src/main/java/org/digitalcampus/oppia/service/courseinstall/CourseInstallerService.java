@@ -38,7 +38,9 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -170,80 +172,190 @@ public class CourseInstallerService extends FileIntentService {
         CourseInstallerService.setInstance(null);
     }
 
-    private boolean downloadCourseFile(String fileUrl, String shortname, Double versionID){
+    private OkHttpClient getDownloadClient() {
+        return new OkHttpClient.Builder()
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(0, TimeUnit.SECONDS)   // unlimited for large files
+                .writeTimeout(0, TimeUnit.SECONDS)
+                .retryOnConnectionFailure(true)
+                .build();
+    }
+
+//    private boolean downloadCourseFile(String fileUrl, String shortname, Double versionID){
+//
+//        long startTime = System.currentTimeMillis();
+//        File downloadedFile = null;
+//
+//        try {
+//        	DbHelper db = DbHelper.getInstance(this);
+//        	User u = db.getUser(SessionManager.getUsername(this));
+//
+//            OkHttpClient client = HTTPClientUtils.getClient(this);
+//            Request request = new Request.Builder()
+//                    .url(HTTPClientUtils.getUrlWithCredentials(fileUrl, u.getUsername(), u.getApiKey()))
+//                    .build();
+//
+//            Response response = client.newCall(request).execute();
+//
+//            long fileLength = response.body().contentLength();
+//            long availableStorage = Storage.getAvailableStorageSize(this);
+//            Log.d(TAG, "sizes: Content-length: " + fileLength + ". available storage: " + availableStorage);
+//
+//            if (fileLength >= availableStorage){
+//                sendBroadcast(fileUrl, ACTION_FAILED, this.getString(R.string.error_insufficient_storage_available));
+//                removeDownloading(fileUrl);
+//                return false;
+//            }
+//
+//            String localFileName = Course.getLocalFilename(shortname, versionID);
+//            downloadedFile = new File(Storage.getDownloadPath(this),localFileName);
+//
+//            try (FileOutputStream f = new FileOutputStream(downloadedFile);
+//                    InputStream in = response.body().byteStream()){
+//
+//                byte[] buffer = new byte[8192];
+//                int len1;
+//                long total = 0;
+//                int previousProgress = 0;
+//                int progress;
+//
+//                while ((len1 = in.read(buffer)) > 0) {
+//                    //If received a cancel action while downloading, stop it
+//                    if (isCancelled(fileUrl)) {
+//                        Log.d(TAG, "Course " + localFileName + " cancelled while downloading. Deleting temp file...");
+//                        FileUtils.deleteFile(downloadedFile);
+//                        removeCancelled(fileUrl);
+//                        removeDownloading(fileUrl);
+//                        return false;
+//                    }
+//
+//                    total += len1;
+//                    progress = (int)((total*100)/fileLength);
+//                    if ( (progress > 0) && (progress > previousProgress)){
+//                        sendBroadcast(fileUrl, ACTION_DOWNLOAD, ""+progress);
+//                        previousProgress = progress;
+//                    }
+//                    f.write(buffer, 0, len1);
+//                }
+//            }
+//
+//        } catch (MalformedURLException | UserNotFoundException e) {
+//            logAndNotifyError(fileUrl, e);
+//            return false;
+//        } catch (IOException e) {
+//            FileUtils.deleteFile(downloadedFile);
+//            logAndNotifyError(fileUrl, e);
+//            return false;
+//        }
+//
+//        Log.d(TAG, fileUrl + " succesfully downloaded");
+//        removeDownloading(fileUrl);
+//        sendBroadcast(fileUrl, ACTION_INSTALL, "0");
+//
+//        long estimatedTime = System.currentTimeMillis() - startTime;
+//        Log.d(TAG, "MeasureTime - " + ": " + estimatedTime + "ms");
+//        return true;
+//    }
+
+    private boolean downloadCourseFile(String fileUrl, String shortname, Double versionID) {
 
         long startTime = System.currentTimeMillis();
         File downloadedFile = null;
 
         try {
-        	DbHelper db = DbHelper.getInstance(this);
-        	User u = db.getUser(SessionManager.getUsername(this));
+            DbHelper db = DbHelper.getInstance(this);
+            User u = db.getUser(SessionManager.getUsername(this));
 
-            OkHttpClient client = HTTPClientUtils.getClient(this);
+            OkHttpClient client = getDownloadClient();
+
+            HttpUrl urlWithCreds = HTTPClientUtils.getUrlWithCredentials(
+                    fileUrl, u.getUsername(), u.getApiKey()
+            );
+
             Request request = new Request.Builder()
-                    .url(HTTPClientUtils.getUrlWithCredentials(fileUrl, u.getUsername(), u.getApiKey()))
+                    .url(urlWithCreds)   // ✔ HttpUrl accepted
+                    .header("Accept-Encoding", "identity")
                     .build();
 
-            Response response = client.newCall(request).execute();
+            try (Response response = client.newCall(request).execute()) {
 
-            long fileLength = response.body().contentLength();
-            long availableStorage = Storage.getAvailableStorageSize(this);
-            Log.d(TAG, "sizes: Content-length: " + fileLength + ". available storage: " + availableStorage);
+                if (!response.isSuccessful() || response.body() == null) {
+                    sendBroadcast(fileUrl, ACTION_FAILED, "Download failed");
+                    removeDownloading(fileUrl);
+                    return false;
+                }
 
-            if (fileLength >= availableStorage){
-                sendBroadcast(fileUrl, ACTION_FAILED, this.getString(R.string.error_insufficient_storage_available));
-                removeDownloading(fileUrl);
-                return false;
-            }
+                long fileLength = response.body().contentLength();
+                long availableStorage = Storage.getAvailableStorageSize(this);
 
-            String localFileName = Course.getLocalFilename(shortname, versionID);
-            downloadedFile = new File(Storage.getDownloadPath(this),localFileName);
+                Log.d(TAG, "sizes: Content-length=" + fileLength +
+                        ", available storage=" + availableStorage);
 
-            try (FileOutputStream f = new FileOutputStream(downloadedFile);
-                    InputStream in = response.body().byteStream()){
+                if (fileLength > 0 && fileLength >= availableStorage) {
+                    sendBroadcast(fileUrl, ACTION_FAILED,
+                            getString(R.string.error_insufficient_storage_available));
+                    removeDownloading(fileUrl);
+                    return false;
+                }
 
-                byte[] buffer = new byte[8192];
-                int len1;
-                long total = 0;
-                int previousProgress = 0;
-                int progress;
+                String localFileName = Course.getLocalFilename(shortname, versionID);
+                downloadedFile = new File(Storage.getDownloadPath(this), localFileName);
 
-                while ((len1 = in.read(buffer)) > 0) {
-                    //If received a cancel action while downloading, stop it
-                    if (isCancelled(fileUrl)) {
-                        Log.d(TAG, "Course " + localFileName + " cancelled while downloading. Deleting temp file...");
-                        FileUtils.deleteFile(downloadedFile);
-                        removeCancelled(fileUrl);
-                        removeDownloading(fileUrl);
-                        return false;
+                try (InputStream in = response.body().byteStream();
+                     FileOutputStream out = new FileOutputStream(downloadedFile)) {
+
+                    byte[] buffer = new byte[8192]; // SAFE buffer
+                    int read;
+                    long total = 0;
+                    int previousProgress = 0;
+
+                    while ((read = in.read(buffer)) != -1) {
+
+                        if (isCancelled(fileUrl)) {
+                            Log.d(TAG, "Download cancelled, deleting file");
+                            FileUtils.deleteFile(downloadedFile);
+                            removeCancelled(fileUrl);
+                            removeDownloading(fileUrl);
+                            return false;
+                        }
+
+                        out.write(buffer, 0, read);
+                        total += read;
+
+                        if (fileLength > 0) {
+                            int progress = (int) ((total * 100) / fileLength);
+                            if (progress > previousProgress) {
+                                sendBroadcast(fileUrl, ACTION_DOWNLOAD,
+                                        String.valueOf(progress));
+                                previousProgress = progress;
+                            }
+                        }
                     }
 
-                    total += len1;
-                    progress = (int)((total*100)/fileLength);
-                    if ( (progress > 0) && (progress > previousProgress)){
-                        sendBroadcast(fileUrl, ACTION_DOWNLOAD, ""+progress);
-                        previousProgress = progress;
-                    }
-                    f.write(buffer, 0, len1);
+                    out.flush();
                 }
             }
 
-        } catch (MalformedURLException | UserNotFoundException e) {
+        } catch (UserNotFoundException e) {
             logAndNotifyError(fileUrl, e);
             return false;
         } catch (IOException e) {
-            FileUtils.deleteFile(downloadedFile);
+            if (downloadedFile != null) {
+                FileUtils.deleteFile(downloadedFile);
+            }
             logAndNotifyError(fileUrl, e);
             return false;
         }
 
-        Log.d(TAG, fileUrl + " succesfully downloaded");
+        Log.d(TAG, fileUrl + " successfully downloaded");
         removeDownloading(fileUrl);
         sendBroadcast(fileUrl, ACTION_INSTALL, "0");
 
-        long estimatedTime = System.currentTimeMillis() - startTime;
-        Log.d(TAG, "MeasureTime - " + ": " + estimatedTime + "ms");
+        Log.d(TAG, "Download time: " +
+                (System.currentTimeMillis() - startTime) + "ms");
+
         return true;
     }
+
 
 }

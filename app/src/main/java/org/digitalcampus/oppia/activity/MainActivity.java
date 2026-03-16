@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -39,7 +41,9 @@ import org.digitalcampus.oppia.model.User;
 import org.digitalcampus.oppia.task.FetchServerInfoTask;
 import org.digitalcampus.oppia.utils.ConnectionUtils;
 import org.digitalcampus.oppia.utils.UIUtils;
+import org.digitalcampus.oppia.utils.ui.AppTourManager;
 import org.digitalcampus.oppia.utils.ui.DrawerMenuManager;
+import org.digitalcampus.oppia.utils.ui.MediaTourManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -63,6 +67,7 @@ public class MainActivity extends AppActivity implements BottomNavigationView.On
     private ViewBadgeBinding bindingBadgeView;
     private boolean stagingWarningClosed;
 
+    AppTourManager appTourManager;
 
     @SuppressLint("RestrictedApi")
     @Override
@@ -252,7 +257,40 @@ public class MainActivity extends AppActivity implements BottomNavigationView.On
         super.onPostCreate(savedInstanceState);
         // Sync the toggle state after onRestoreInstanceState has occurred.
         drawer.onPostCreate();
+
+        // Delay tour start to ensure toolbar menu and drawer items are ready
+        new Handler().postDelayed(() -> {
+            appTourManager = new AppTourManager(
+                    MainActivity.this,
+                    binding.drawer,
+                    binding.navigationView,
+                    binding.navBottomView,
+                    binding.toolbar.getRoot()
+            );
+            appTourManager.startTourIfFirstLaunch();
+        }, 300); // delay 300ms for layout inflation
+
+        new Handler(Looper.getMainLooper()).postDelayed(() -> checkAndStartDownloadTour(), 400);
     }
+
+    private void checkAndStartDownloadTour() {
+        // Ensure the media scan view exists in the current layout
+        View mediaScanView = findViewById(R.id.view_media_scan);
+        if (mediaScanView != null && mediaScanView.getVisibility() == View.VISIBLE) {
+            View downloadButton = mediaScanView.findViewById(R.id.btn_media_download);
+            if (downloadButton != null) {
+                // Add slight delay to ensure layout is completely drawn before tooltip shows
+                downloadButton.postDelayed(() -> {
+                    MediaTourManager mediaTour = new MediaTourManager(MainActivity.this);
+                    mediaTour.startDownloadButtonTour(downloadButton);
+                }, 300);
+            }
+        } else {
+            // In case view_media_scan becomes visible later (e.g., after async load)
+            new Handler(Looper.getMainLooper()).postDelayed(this::checkAndStartDownloadTour, 800);
+        }
+    }
+
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {

@@ -56,6 +56,7 @@ import org.digitalcampus.oppia.model.MultiLangInfoModel;
 import org.digitalcampus.oppia.model.Section;
 import org.digitalcampus.oppia.utils.ImageUtils;
 import org.digitalcampus.oppia.utils.UIUtils;
+import org.digitalcampus.oppia.utils.ui.CourseTourManager;
 import org.digitalcampus.oppia.utils.ui.SimpleAnimator;
 import org.digitalcampus.oppia.widgets.BaseWidget;
 import org.digitalcampus.oppia.widgets.FeedbackWidget;
@@ -435,6 +436,13 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
         }
         binding.activityWidgetPager.setCurrentItem(currentActivityNo);
         showNextSectionButtonIfNeeded();
+        if(!isBaseline){
+            new Handler().postDelayed(() -> {
+                View swipeTabs = binding.activityWidgetPager; // or your ViewPager instance
+                CourseTourManager courseTour = new CourseTourManager(this);
+                courseTour.startCourseTourIfFirstLaunch(swipeTabs);
+            }, 1000);
+        }
     }
 
     private Activity determineActivityType(int i, List<Fragment> fragments) {
@@ -482,6 +490,13 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
     }
 
     private void showNextSectionButtonIfNeeded() {
+
+        // Do NOT show Next Section button for Sequencing Through Sections mode
+        if (course.getSequencingMode().equals(Course.SEQUENCING_MODE_THROUGH_SECTIONS)) {
+            binding.nextCourse.setVisibility(View.GONE);
+            return;
+        }
+
         int totalTabs = binding.tabsToolbar.getTabCount();
         int currentTab = binding.activityWidgetPager.getCurrentItem();
 //        if (currentTab == totalTabs - 1) {
@@ -576,7 +591,13 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
             currentWidget.resetTimeTracking();
         } else {
             Runnable setPreviousTab = () -> {
-                UIUtils.showAlert(CourseActivity.this, R.string.sequencing_dialog_title, R.string.sequencing_section_message);
+                // Don't show alert for THROUGH_SECTIONS mode (unlock inside section)
+                if (!course.getSequencingMode().equals(Course.SEQUENCING_MODE_THROUGH_SECTIONS)) {
+                    UIUtils.showAlert(CourseActivity.this,
+                            R.string.sequencing_dialog_title,
+                            R.string.sequencing_section_message);
+                }
+
                 TabLayout.Tab target = binding.tabsToolbar.getTabAt(currentActivityNo);
                 if (target != null) {
                     target.select();
@@ -628,6 +649,12 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
     private boolean canNavigateTo(int newTab) {
         //If the course does not have a sequencing mode, we can navigate freely
         if (course.getSequencingMode().equals(Course.SEQUENCING_MODE_NONE)) return true;
+
+        // Allow navigation inside section freely for THROUGH_SECTIONS mode
+        if (course.getSequencingMode().equals(Course.SEQUENCING_MODE_THROUGH_SECTIONS)) {
+            return true;
+        }
+
         // if it is a previous activity (or the first), no need for further checks
         if ((newTab == 0) || (newTab <= currentActivityNo)) return true;
         Activity previousActivity = activities.get(newTab - 1);

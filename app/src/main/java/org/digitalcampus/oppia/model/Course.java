@@ -45,6 +45,7 @@ public class Course extends MultiLangInfoModel implements Serializable {
     public static final String SEQUENCING_MODE_NONE = "none";
     public static final String SEQUENCING_MODE_SECTION = "section";
     public static final String SEQUENCING_MODE_COURSE = "course";
+    public static final String SEQUENCING_MODE_THROUGH_SECTIONS = "sequencingThroughSection";
 
     public static final String TAG = Course.class.getSimpleName();
 

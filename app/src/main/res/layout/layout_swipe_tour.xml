@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:maxWidth="320dp"
+    android:minWidth="300dp"
+    android:minHeight="160dp"
+    android:background="@drawable/bg_tooltip_oppia"
+    android:padding="11dp"
+    android:gravity="center_horizontal">
+
+    <!-- Title style removed, only main text -->
+    <TextView
+        android:id="@+id/tvTooltipTitle"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:textAlignment="center"
+        android:text="Navigating through a Course" />
+
+    <TextView
+        android:id="@+id/tvSwipeText"
+        android:textSize="16sp"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:textAlignment="center"
+        android:lineSpacingExtra="2dp"
+        android:text="Swipe left or right to move between screens in a lesson." />
+
+    <!-- Single button like first tooltip style -->
+    <Button
+        android:id="@+id/btnGotIt"
+        android:text="Got it"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/toolbar_bg_color"
+        android:minWidth="120dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

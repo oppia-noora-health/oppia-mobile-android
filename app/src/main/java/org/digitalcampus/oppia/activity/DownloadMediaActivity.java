@@ -20,6 +20,7 @@ package org.digitalcampus.oppia.activity;
 import android.animation.ValueAnimator;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -45,6 +46,7 @@ import org.digitalcampus.oppia.task.result.EntityListResult;
 import org.digitalcampus.oppia.utils.ConnectionUtils;
 import org.digitalcampus.oppia.utils.MultiChoiceHelper;
 import org.digitalcampus.oppia.utils.UIUtils;
+import org.digitalcampus.oppia.utils.ui.MediaTourManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,6 +55,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 
 public class DownloadMediaActivity extends AppActivity implements DownloadMediaListener, ScanMediaListener {
@@ -66,6 +69,7 @@ public class DownloadMediaActivity extends AppActivity implements DownloadMediaL
     private DownloadMediaAdapter adapterMedia;
     private MultiChoiceHelper multiChoiceHelper;
     private ActivityDownloadMediaBinding binding;
+    private MediaTourManager mediaTourManager;
 
     public enum DownloadMode {INDIVIDUALLY, DOWNLOAD_ALL, STOP_ALL}
 
@@ -97,6 +101,7 @@ public class DownloadMediaActivity extends AppActivity implements DownloadMediaL
         Media.resetMediaScan(prefs);
 
         scanMissingMedia();
+        mediaTourManager = new MediaTourManager(this);
     }
 
     private void configureAdapterMedia() {
@@ -155,7 +160,6 @@ public class DownloadMediaActivity extends AppActivity implements DownloadMediaL
                 binding.downloadSelected.setText(getString(R.string.missing_media_stop_selected));
 
                 menu.findItem(R.id.menu_sort_by).setVisible(false);
-
                 return true;
             }
 
@@ -248,6 +252,49 @@ public class DownloadMediaActivity extends AppActivity implements DownloadMediaL
         ContextCompat.registerReceiver(this, receiver, broadcastFilter, ContextCompat.RECEIVER_NOT_EXPORTED);
 
         invalidateOptionsMenu();
+
+        new Handler().postDelayed(() -> {
+            if (!isFinishing() && !isDestroyed()) {
+                View overflowButton = findOverflowButton();
+                if (overflowButton != null) {
+                    MediaTourManager mediaTour = new MediaTourManager(this);
+                    mediaTour.startSelectAllTour(overflowButton); // tooltip appears to the right
+                }
+            }
+        }, 600); // small delay to allow ActionBar layout
+
+    }
+
+    private View findOverflowButton() {
+        Toolbar toolbar = null;
+        // Try to get the toolbar from layout
+        int toolbarId = getResources().getIdentifier("toolbar", "id", getPackageName());
+        if (toolbarId != 0) {
+            toolbar = findViewById(toolbarId);
+        }
+
+        if (toolbar == null && getSupportActionBar() != null) {
+            // fallback: get decor view action bar
+            int actionBarId = getResources().getIdentifier("action_bar", "id", "android");
+            toolbar = findViewById(actionBarId);
+        }
+
+        if (toolbar != null) {
+            for (int i = 0; i < toolbar.getChildCount(); i++) {
+                View child = toolbar.getChildAt(i);
+                if (child instanceof androidx.appcompat.widget.ActionMenuView) {
+                    androidx.appcompat.widget.ActionMenuView menuView = (androidx.appcompat.widget.ActionMenuView) child;
+                    for (int j = 0; j < menuView.getChildCount(); j++) {
+                        View possibleButton = menuView.getChildAt(j);
+                        if (possibleButton.getContentDescription() != null &&
+                                possibleButton.getContentDescription().toString().toLowerCase().contains("more options")) {
+                            return possibleButton; // Found three-dot button
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     @Override

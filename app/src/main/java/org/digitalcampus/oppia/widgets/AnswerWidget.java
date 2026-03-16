@@ -28,6 +28,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -38,6 +39,7 @@ import android.widget.Toast;
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.RecyclerView;
 
 import org.digitalcampus.mobile.learning.R;
 import org.digitalcampus.mobile.learning.databinding.WidgetQuizBinding;
@@ -63,6 +65,7 @@ import org.digitalcampus.oppia.utils.UIUtils;
 import org.digitalcampus.oppia.utils.resources.ExternalResourceOpener;
 import org.digitalcampus.oppia.utils.storage.FileUtils;
 import org.digitalcampus.oppia.utils.ui.ProgressBarAnimator;
+import org.digitalcampus.oppia.utils.ui.QuizTourManager;
 import org.digitalcampus.oppia.utils.ui.SimpleAnimator;
 import org.digitalcampus.oppia.widgets.quiz.DescriptionWidget;
 import org.digitalcampus.oppia.widgets.quiz.EssayWidget;
@@ -183,6 +186,7 @@ public abstract class AnswerWidget extends BaseWidget {
     private void loadContent() {
         if (this.quiz == null) {
             Quiz loadedQuiz = new Quiz();
+            Log.d("quiz",loadedQuiz.toString());
             boolean loadSuccess = loadedQuiz.load(contents, prefLang);
             if (!loadSuccess) {
                 if (!loadingQuizErrorDisplayed) {
@@ -312,9 +316,9 @@ public abstract class AnswerWidget extends BaseWidget {
             }
 
         }
-
+        boolean isFeedback = this instanceof FeedbackWidget;
         if (q instanceof MultiChoice) {
-            currentQuestion = new MultiChoiceWidget(super.getActivity(), getView(), container, q);
+            currentQuestion = new MultiChoiceWidget(super.getActivity(), getView(), container, q,isFeedback);
         } else if (q instanceof Essay) {
             currentQuestion = new EssayWidget(super.getActivity(), getView(), container);
         } else if (q instanceof MultiSelect) {
@@ -333,6 +337,13 @@ public abstract class AnswerWidget extends BaseWidget {
         currentQuestion.setQuestionResponses(q.getResponseOptions(), q.getUserResponses());
         this.setProgress();
         this.setNav();
+
+        View quizOptions = getView().findViewById(R.id.quiz_response_widget);
+        if (quizOptions != null && quizOptions.isShown() && !isFeedback && !(q instanceof Essay)) {
+            // Start Answer Tour only once
+            QuizTourManager quizTourManager = new QuizTourManager(getActivity());
+            quizTourManager.startAnswerTourIfFirstLaunch(quizOptions);
+        }
     }
 
     protected void checkPasswordProtectionAndShowQuestion() {
@@ -471,6 +482,16 @@ public abstract class AnswerWidget extends BaseWidget {
                     return true; // Proceed normally
                 }
             }
+            else if (quiz.getCurrentQuestion() instanceof MultiChoice) {
+                if (this instanceof FeedbackWidget) {
+                    // For rating feedback questions, answer is mandatory
+                    if (answers == null || answers.isEmpty()) {
+                        Log.d("quiz", "For rating feedback questions, answer is mandatory");
+                        return false; // Stop and ask for input
+                    }
+                }
+
+            }
 
             if (quiz.getCurrentQuestion().responseExpected() && (answers == null || answers.isEmpty())) {
                 return false;
@@ -607,6 +628,7 @@ public abstract class AnswerWidget extends BaseWidget {
             actionBtn.setOnClickListener(v -> restart());
         }
     }
+
 
     private void restart() {
         this.setStartTime(System.currentTimeMillis() / 1000);

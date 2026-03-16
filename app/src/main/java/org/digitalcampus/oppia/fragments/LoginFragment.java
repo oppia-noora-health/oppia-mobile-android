@@ -261,10 +261,13 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
     private void sendOtpWithValidation() {
         ccp.registerCarrierNumberEditText(phoneEditText);
         String mobile = phoneEditText.getText().toString().trim();
-        if ((mobile.length() > 0) && !ccp.isValidFullNumber()) {
-            UIUtils.showAlert(getActivity(), R.string.error, R.string.error_invalid_phone);
-            return;
-        }
+        Log.d("phone number",mobile);
+//        if ((mobile.length() > 0) && !ccp.isValidFullNumber()) {
+//        if ((mobile.length() > 0)){
+//            Log.d("phone ccp", String.valueOf(ccp.isValidFullNumber()));
+//            UIUtils.showAlert(getActivity(), R.string.error, R.string.error_invalid_phone);
+//            return;
+//        }
         String fullNumber = ccp.getFormattedFullNumber();
         checkExternalProfileAndSendOtp(fullNumber);
     }
@@ -337,11 +340,12 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
         ccp.registerCarrierNumberEditText(phoneEditText);
 
         String phoneNo = phoneEditText.getText().toString().trim();
-        if ((phoneNo.length() > 0) && !ccp.isValidFullNumber()) {
-            UIUtils.showAlert(getActivity(), R.string.error, R.string.error_invalid_phone);
-            phoneEditText.requestFocus();
-            return;
-        }
+//        if ((phoneNo.length() > 0) && !ccp.isValidFullNumber()) {
+//        if ((phoneNo.length() > 0)){
+//            UIUtils.showAlert(getActivity(), R.string.error, R.string.error_invalid_phone);
+//            phoneEditText.requestFocus();
+//            return;
+//        }
 
         String fullNumber = ccp.getFormattedFullNumber();
 
@@ -462,11 +466,11 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
             return;
         }
 
-        if (!ccp.isValidFullNumber()) {
-            UIUtils.showAlert(getActivity(), R.string.error, R.string.error_invalid_phone);
-            phoneEditText.requestFocus();
-            return;
-        }
+//        if (!ccp.isValidFullNumber()) {
+//            UIUtils.showAlert(getActivity(), R.string.error, R.string.error_invalid_phone);
+//            phoneEditText.requestFocus();
+//            return;
+//        }
 
         if (otp.length() != 6) {
             UIUtils.showAlert(getActivity(), R.string.error, R.string.error_invalid_otp);

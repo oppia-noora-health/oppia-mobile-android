@@ -62,6 +62,8 @@ public class DrawerMenuManager {
     private DrawerLayout drawerLayout;
     private Map<Integer, MenuOption> customOptions = new HashMap<>();
 
+    private AppTourManager appTourManager;
+
     public DrawerMenuManager(AppActivity act) {
         drawerAct = act;
     }
