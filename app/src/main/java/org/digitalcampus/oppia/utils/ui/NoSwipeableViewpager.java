@@ -22,11 +22,22 @@ public class NoSwipeableViewpager extends ViewPager {
     }
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        return canScroll && super.onTouchEvent(ev);
+        if (!canScroll) return false;
+        try {
+            return super.onTouchEvent(ev);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        return canScroll && super.onInterceptTouchEvent(ev);
+        if (!canScroll) return false;
+        try {
+            return super.onInterceptTouchEvent(ev);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
 }

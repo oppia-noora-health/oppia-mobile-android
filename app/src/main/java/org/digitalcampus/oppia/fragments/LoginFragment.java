@@ -31,6 +31,7 @@ import android.os.CountDownTimer;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -157,24 +158,38 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
             public void afterTextChanged(Editable s) {}
         });
 
-        TextWatcher otpWatcher = new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
-                checkOtpFieldsFilled();
-            }
-            @Override public void afterTextChanged(Editable s) {}
-        };
-
-        // Add to all 6 OTP fields
-        otpDigit1.addTextChangedListener(otpWatcher);
-        otpDigit2.addTextChangedListener(otpWatcher);
-        otpDigit3.addTextChangedListener(otpWatcher);
-        otpDigit4.addTextChangedListener(otpWatcher);
-        otpDigit5.addTextChangedListener(otpWatcher);
-        otpDigit6.addTextChangedListener(otpWatcher);
+        setupOtpField(otpDigit1, otpDigit2, null);
+        setupOtpField(otpDigit2, otpDigit3, otpDigit1);
+        setupOtpField(otpDigit3, otpDigit4, otpDigit2);
+        setupOtpField(otpDigit4, otpDigit5, otpDigit3);
+        setupOtpField(otpDigit5, otpDigit6, otpDigit4);
+        setupOtpField(otpDigit6, null, otpDigit5);
 
 //        return binding.getRoot();
         return view;
+    }
+
+    private void setupOtpField(EditText current, EditText next, EditText prev) {
+        current.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                checkOtpFieldsFilled();
+                if (s.length() == 1 && next != null) {
+                    next.requestFocus();
+                }
+            }
+        });
+        current.setOnKeyListener((v, keyCode, event) -> {
+            if (keyCode == KeyEvent.KEYCODE_DEL
+                    && event.getAction() == KeyEvent.ACTION_DOWN
+                    && current.getText().toString().isEmpty()
+                    && prev != null) {
+                prev.requestFocus();
+                return true;
+            }
+            return false;
+        });
     }
 
     private void checkOtpFieldsFilled() {
@@ -395,11 +410,7 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
             @Override
             public void onSuccess() {
                 Toast.makeText(getActivity(), "OTP sent", Toast.LENGTH_SHORT).show();
-                inputLayout.setVisibility(View.GONE);
-                otpLayout.setVisibility(View.VISIBLE);
-                String formattedMessage = "We have sent a one-time password (OTP) to \n" + fullNumber + " for verification";
-                otpSentTextView.setText(formattedMessage);
-                startOtpCountdown();
+                showOtpEntryScreen(fullNumber);
             }
 
             @Override
@@ -412,11 +423,22 @@ public class LoginFragment extends AppFragment implements SubmitEntityListener<U
 
             @Override
             public void onError(String error) {
+                // Any failure other than "user does not exist" still lets the user
+                // proceed to the OTP entry screen, so they can fall back to
+                // resend-via-WhatsApp if SMS delivery failed.
                 Toast.makeText(getActivity(), error, Toast.LENGTH_SHORT).show();
-                phoneEditText.setEnabled(true);
-                sendOtpBtn.setEnabled(true);
+                showOtpEntryScreen(fullNumber);
             }
         });
+    }
+
+    //    changed by namratha
+    private void showOtpEntryScreen(String fullNumber) {
+        inputLayout.setVisibility(View.GONE);
+        otpLayout.setVisibility(View.VISIBLE);
+        String formattedMessage = "We have sent a one-time password (OTP) to \n" + fullNumber + " for verification";
+        otpSentTextView.setText(formattedMessage);
+        startOtpCountdown();
     }
 
 

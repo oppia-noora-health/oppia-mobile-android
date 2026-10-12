@@ -43,6 +43,8 @@ public class User {
 	public static final String POINTS = "points";
 	public static final String BADGES = "badges";
 	public static final String COHORTS = "cohorts";
+	public static final String USER_TYPE = "user_type";
+	public static final String USER_TYPE_SUPERUSER = "superuser";
 
 	private long userId;
 	private String username;
@@ -62,6 +64,7 @@ public class User {
 	private int badges = 0;
 	private boolean offlineRegister = false;
 	private List<Integer> cohorts = new ArrayList<>();
+	private String userType;
 
 	private Map<String, CustomValue> userCustomFields = new HashMap<>();
 
@@ -259,6 +262,10 @@ public class User {
 		}
 		this.setCustomFieldsFromJSON(ctx, json);
 
+		if (json.has(User.USER_TYPE)) {
+			this.setUserType(json.getString(User.USER_TYPE));
+		}
+
 		// Set user cohorts
 		if (json.has(User.COHORTS)) {
 			JSONArray cohortsJson = json.getJSONArray(User.COHORTS);
@@ -283,6 +290,18 @@ public class User {
 
 	public List<Integer> getCohorts() {
 		return this.cohorts;
+	}
+
+	public String getUserType() {
+		return userType;
+	}
+
+	public void setUserType(String userType) {
+		this.userType = userType;
+	}
+
+	public boolean isSuperuser() {
+		return USER_TYPE_SUPERUSER.equals(userType);
 	}
 
 	public boolean isLocalUser() {

@@ -1,6 +1,7 @@
 package org.digitalcampus.oppia.task;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -25,6 +26,7 @@ import okhttp3.Response;
 
 public class FetchUserTask {
     public static final String TAG = FetchUserTask.class.getSimpleName();
+    public static final String ACTION_USER_TYPE_UPDATED = "org.digitalcampus.oppia.ACTION_USER_TYPE_UPDATED";
 
     private final Executor executor = Executors.newSingleThreadExecutor();
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -53,6 +55,7 @@ public class FetchUserTask {
                         localUser.updateFromJSON(ctx, json);
                         DbHelper.getInstance(ctx).addOrUpdateUser(localUser);
                         new MetaDataUtils(ctx).saveMetaData(json);
+                        ctx.sendBroadcast(new Intent(ACTION_USER_TYPE_UPDATED));
                     } catch (JSONException e) {
                         Analytics.logException(e);
                         Log.d(TAG, "JSON error: ", e);

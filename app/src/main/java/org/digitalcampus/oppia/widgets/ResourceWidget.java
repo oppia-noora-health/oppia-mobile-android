@@ -21,8 +21,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,6 +33,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
+
+import org.digitalcampus.oppia.utils.ImageUtils;
 import android.widget.Toast;
 
 import org.digitalcampus.mobile.learning.R;
@@ -133,7 +135,8 @@ public class ResourceWidget extends BaseWidget {
 		// show image files
 		if (activity.getMimeType().equals("image/jpeg") || activity.getMimeType().equals("image/png")){
 			ImageView iv = new ImageView(super.getActivity());
-			Bitmap myBitmap = BitmapFactory.decodeFile(fileUrl);
+			DisplayMetrics dm = super.getActivity().getResources().getDisplayMetrics();
+			Bitmap myBitmap = ImageUtils.decodeSampledBitmapFromFile(fileUrl, dm.widthPixels, dm.heightPixels);
 			iv.setImageBitmap(myBitmap);
 			LayoutParams lp = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 			ll.addView(iv, lp);

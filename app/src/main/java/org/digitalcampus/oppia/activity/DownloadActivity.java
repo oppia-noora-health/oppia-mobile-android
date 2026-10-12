@@ -17,6 +17,8 @@
 
 package org.digitalcampus.oppia.activity;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -39,6 +41,7 @@ import org.digitalcampus.oppia.fragments.CoursesListFragment;
 import org.digitalcampus.oppia.model.CourseInstallViewAdapter;
 import org.digitalcampus.oppia.adapter.DownloadCoursesAdapter;
 import org.digitalcampus.oppia.analytics.Analytics;
+import org.digitalcampus.oppia.api.ApiEndpoint;
 import org.digitalcampus.oppia.api.Paths;
 import org.digitalcampus.oppia.listener.APIRequestListener;
 import org.digitalcampus.oppia.listener.CourseInstallerListener;
@@ -50,6 +53,7 @@ import org.digitalcampus.oppia.model.User;
 import org.digitalcampus.oppia.service.courseinstall.CourseInstallerServiceDelegate;
 import org.digitalcampus.oppia.service.courseinstall.CourseInstallerService;
 import org.digitalcampus.oppia.service.courseinstall.InstallerBroadcastReceiver;
+import org.digitalcampus.oppia.task.FetchUserTask;
 import org.digitalcampus.oppia.task.result.BasicResult;
 import org.digitalcampus.oppia.utils.MultiChoiceHelper;
 import org.digitalcampus.oppia.utils.TextUtilsJava;
@@ -83,12 +87,21 @@ public class DownloadActivity extends AppActivity implements APIRequestListener,
 
     private InstallerBroadcastReceiver receiver;
 
+    private final BroadcastReceiver userTypeUpdatedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            refreshCourseList();
+        }
+    };
+
     @Inject
     CourseInstallRepository courseInstallRepository;
     @Inject
     CourseInstallerServiceDelegate courseInstallerServiceDelegate;
     @Inject
     CoursesRepository coursesRepository;
+    @Inject
+    ApiEndpoint apiEndpoint;
     private DownloadCoursesAdapter coursesAdapter;
     private MultiChoiceHelper multiChoiceHelper;
     private Course courseToUpdate;
@@ -274,6 +287,12 @@ public class DownloadActivity extends AppActivity implements APIRequestListener,
         broadcastFilter.setPriority(IntentFilter.SYSTEM_HIGH_PRIORITY);
         ContextCompat.registerReceiver(this, receiver, broadcastFilter, ContextCompat.RECEIVER_NOT_EXPORTED);
 
+        IntentFilter userTypeFilter = new IntentFilter(FetchUserTask.ACTION_USER_TYPE_UPDATED);
+        ContextCompat.registerReceiver(this, userTypeUpdatedReceiver, userTypeFilter, ContextCompat.RECEIVER_NOT_EXPORTED);
+
+        User currentUser = getAppComponent().getUser();
+        new FetchUserTask().updateLoggedUserProfile(this, apiEndpoint, currentUser);
+
         if (json == null) {
             // The JSON download task has not started or been completed yet
             getCourseList();
@@ -293,6 +312,7 @@ public class DownloadActivity extends AppActivity implements APIRequestListener,
         super.onPause();
         hideProgressDialog();
         unregisterReceiver(receiver);
+        unregisterReceiver(userTypeUpdatedReceiver);
     }
 
     @SuppressWarnings("unchecked")
@@ -432,6 +452,9 @@ public class DownloadActivity extends AppActivity implements APIRequestListener,
     private void filterCoursesByCohort() {
         App app = (App) this.getApplicationContext();
         User currentUser = app.getComponent().getUser();
+        if (currentUser.isSuperuser()) {
+            return;
+        }
         Iterator<CourseInstallViewAdapter> iter = courses.iterator();
         while (iter.hasNext()) {
             CourseInstallViewAdapter courseAdapter = iter.next();

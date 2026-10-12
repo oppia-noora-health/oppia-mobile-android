@@ -29,11 +29,14 @@ import org.digitalcampus.mobile.learning.R;
 import org.digitalcampus.mobile.learning.databinding.ActivityStartUpBinding;
 import org.digitalcampus.oppia.analytics.Analytics;
 import org.digitalcampus.oppia.analytics.AnalyticsProvider;
+import org.digitalcampus.oppia.api.ApiEndpoint;
 import org.digitalcampus.oppia.application.PermissionsManager;
 import org.digitalcampus.oppia.application.SessionManager;
 import org.digitalcampus.oppia.listener.InstallCourseListener;
 import org.digitalcampus.oppia.listener.UpgradeListener;
 import org.digitalcampus.oppia.model.DownloadProgress;
+import org.digitalcampus.oppia.model.User;
+import org.digitalcampus.oppia.task.FetchUserTask;
 import org.digitalcampus.oppia.task.ImportLeaderboardsTask;
 import org.digitalcampus.oppia.task.InstallDownloadedCoursesTask;
 import org.digitalcampus.oppia.task.PostInstallTask;
@@ -52,6 +55,9 @@ public class StartUpActivity extends AppActivity implements UpgradeListener, Ins
 
     @Inject
     AnalyticsProvider analyticsProvider;
+
+    @Inject
+    ApiEndpoint apiEndpoint;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -95,18 +101,22 @@ public class StartUpActivity extends AppActivity implements UpgradeListener, Ins
 
         if (SessionManager.isLoggedIn(prefs)) {
 
-            startActivity(new Intent(this, MainActivity.class));
-
-            if (analyticsProvider.shouldShowOptOutRationale(this)) {
-                overridePendingTransition(0, 0);
-                startActivity(new Intent(this, AnalyticsOptinActivity.class));
-            }
+            User currentUser = getAppComponent().getUser();
+            FetchUserTask fetchUserTask = new FetchUserTask();
+            fetchUserTask.setListener(() -> {
+                startActivity(new Intent(this, MainActivity.class));
+                if (analyticsProvider.shouldShowOptOutRationale(this)) {
+                    overridePendingTransition(0, 0);
+                    startActivity(new Intent(this, AnalyticsOptinActivity.class));
+                }
+                finish();
+            });
+            fetchUserTask.updateLoggedUserProfile(this, apiEndpoint, currentUser);
 
         } else {
             startActivity(new Intent(this, WelcomeActivity.class));
+            finish();
         }
-
-        finish();
     }
 
     private void installCourses() {

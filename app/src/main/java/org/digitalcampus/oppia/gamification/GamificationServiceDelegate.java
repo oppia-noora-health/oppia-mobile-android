@@ -2,6 +2,7 @@ package org.digitalcampus.oppia.gamification;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import org.digitalcampus.mobile.quiz.Quiz;
 import org.digitalcampus.oppia.model.Activity;
@@ -47,6 +48,16 @@ public class GamificationServiceDelegate {
         }
     }
 
+    // Android 12+ (API 31+) forbids startService() when the process is in background state.
+    // This can happen in onPause() during multi-window or system-initiated pauses.
+    private void safeStartService(Intent intent) {
+        try {
+            ctx.startService(intent);
+        } catch (IllegalStateException e) {
+            Log.w(TAG, "Cannot start GamificationService from background: " + e.getMessage());
+        }
+    }
+
     public void registerPageActivityEvent(long timetaken, boolean isReadAloud){
 
         if (serviceIntent == null) return;
@@ -55,7 +66,7 @@ public class GamificationServiceDelegate {
         serviceIntent.putExtra(GamificationService.EVENTDATA_TIMETAKEN, timetaken);
         serviceIntent.putExtra(GamificationService.EVENTDATA_READALOUD, isReadAloud);
         putExtraDataIfAny();
-        ctx.startService(serviceIntent);
+        safeStartService(serviceIntent);
 
         serviceIntent = null;
     }
@@ -66,7 +77,7 @@ public class GamificationServiceDelegate {
         serviceIntent.putExtra(GamificationService.SERVICE_EVENT, GamificationService.SERVICE_EVENT_DOWNLOAD);
         serviceIntent.putExtra(GamificationService.SERVICE_COURSE, c);
         putExtraDataIfAny();
-        ctx.startService(serviceIntent);
+        safeStartService(serviceIntent);
 
     }
 
@@ -79,7 +90,7 @@ public class GamificationServiceDelegate {
         serviceIntent.putExtra(GamificationService.EVENTDATA_TIMETAKEN, timetaken);
         serviceIntent.putExtra(GamificationService.SERVICE_QUIZ_SCORE, score);
         putExtraDataIfAny();
-        ctx.startService(serviceIntent);
+        safeStartService(serviceIntent);
 
         serviceIntent = null;
     }
@@ -91,7 +102,7 @@ public class GamificationServiceDelegate {
         serviceIntent.putExtra(GamificationService.SERVICE_EVENT, GamificationService.SERVICE_EVENT_RESOURCE);
         serviceIntent.putExtra(GamificationService.EVENTDATA_TIMETAKEN, timetaken);
         putExtraDataIfAny();
-        ctx.startService(serviceIntent);
+        safeStartService(serviceIntent);
 
         serviceIntent = null;
     }
@@ -106,7 +117,7 @@ public class GamificationServiceDelegate {
         serviceIntent.putExtra(GamificationService.EVENTDATA_QUIZID, quizId);
         serviceIntent.putExtra(GamificationService.EVENTDATA_INSTANCEID, instanceId);
         putExtraDataIfAny();
-        ctx.startService(serviceIntent);
+        safeStartService(serviceIntent);
 
         serviceIntent = null;
 
@@ -121,7 +132,7 @@ public class GamificationServiceDelegate {
         serviceIntent.putExtra(GamificationService.EVENTDATA_MEDIA_FILENAME, mediaFileName);
         serviceIntent.putExtra(GamificationService.EVENTDATA_MEDIA_END_REACHED, mediaEndReached);
         putExtraDataIfAny();
-        ctx.startService(serviceIntent);
+        safeStartService(serviceIntent);
 
         serviceIntent = null;
     }

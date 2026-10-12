@@ -206,10 +206,10 @@ public class PointsFragment extends AppFragment implements TabLayout.OnTabSelect
         }
 
         LineDataSet dataSet = new LineDataSet(entries, "Label"); // add entries to dataset
-        dataSet.setColor(ContextCompat.getColor(getActivity(), R.color.chart_line_color));
+        dataSet.setColor(ContextCompat.getColor(requireContext(), R.color.chart_line_color));
         dataSet.setDrawValues(false);
         dataSet.setDrawFilled(true);
-        dataSet.setCircleColor(ContextCompat.getColor(getActivity(), R.color.chart_dots_color));
+        dataSet.setCircleColor(ContextCompat.getColor(requireContext(), R.color.chart_dots_color));
         dataSet.setFillDrawable(getGradientDrawable());
 
         LineData lineData = new LineData(dataSet);
@@ -241,8 +241,8 @@ public class PointsFragment extends AppFragment implements TabLayout.OnTabSelect
 
     private Drawable getGradientDrawable() {
 
-        int colorStart = ContextCompat.getColor(getActivity(), R.color.chart_gradient_start);
-        int colorEnd = ContextCompat.getColor(getActivity(), R.color.chart_gradient_end);
+        int colorStart = ContextCompat.getColor(requireContext(), R.color.chart_gradient_start);
+        int colorEnd = ContextCompat.getColor(requireContext(), R.color.chart_gradient_end);
 
         int alpha = 128;
         int colorStartAlpha = Color.argb(alpha, Color.red(colorStart), Color.green(colorStart), Color.blue(colorStart));
@@ -335,6 +335,7 @@ public class PointsFragment extends AppFragment implements TabLayout.OnTabSelect
             pointsFull = db.getUserPoints(userId, course, false, false, true);
 
             handler.post(() ->  {
+                if (!isAdded()) return;
                 binding.progressPoints.setVisibility(View.GONE);
                 showPointsFiltered(currentDatesRangePosition);
             });

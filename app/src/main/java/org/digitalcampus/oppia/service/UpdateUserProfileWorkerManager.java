@@ -1,6 +1,7 @@
 package org.digitalcampus.oppia.service;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 
 import androidx.work.Data;
@@ -16,6 +17,7 @@ import org.digitalcampus.oppia.listener.APIRequestFinishListener;
 import org.digitalcampus.oppia.listener.APIRequestListener;
 import org.digitalcampus.oppia.model.User;
 import org.digitalcampus.oppia.task.APIUserRequestTask;
+import org.digitalcampus.oppia.task.FetchUserTask;
 import org.digitalcampus.oppia.task.result.BasicResult;
 import org.digitalcampus.oppia.utils.MetaDataUtils;
 import org.digitalcampus.oppia.utils.TextUtilsJava;
@@ -90,6 +92,7 @@ public class UpdateUserProfileWorkerManager implements APIRequestFinishListener,
                 user.updateFromJSON(context, response);
                 DbHelper.getInstance(context).addOrUpdateUser(user);
                 new MetaDataUtils(context).saveMetaData(response);
+                context.sendBroadcast(new Intent(FetchUserTask.ACTION_USER_TYPE_UPDATED));
             } catch (JSONException e) {
                 Analytics.logException(e);
                 Log.d(TAG, "JSON error: ", e);

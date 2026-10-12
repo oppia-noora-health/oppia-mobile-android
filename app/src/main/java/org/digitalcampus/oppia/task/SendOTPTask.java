@@ -67,8 +67,9 @@ public class SendOTPTask {
                         // Many OTP APIs return { "error": "message..." }
                         String errorMessage = errorJson.optString("error", "Server error: " + response.code());
 
-                        // If server explicitly says "not found" you can detect it here
-                        if (errorMessage.toLowerCase().contains("not found")) {
+                        // If server explicitly says the user doesn't exist, detect it here
+                        String lowerCaseError = errorMessage.toLowerCase();
+                        if (lowerCaseError.contains("not found") || lowerCaseError.contains("does not exist")) {
                             runOnMain(callback::onNotFound);
                         } else {
                             runOnMain(() -> callback.onError(errorMessage));

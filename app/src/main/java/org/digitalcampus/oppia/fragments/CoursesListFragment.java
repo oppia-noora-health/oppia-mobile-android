@@ -41,6 +41,7 @@ import org.digitalcampus.oppia.model.Media;
 import org.digitalcampus.oppia.service.courseinstall.CourseInstallerService;
 import org.digitalcampus.oppia.service.courseinstall.InstallerBroadcastReceiver;
 import org.digitalcampus.oppia.task.DeleteCourseTask;
+import org.digitalcampus.oppia.task.FetchUserTask;
 import org.digitalcampus.oppia.task.UpdateCourseActivityTask;
 import org.digitalcampus.oppia.task.result.BasicResult;
 import org.digitalcampus.oppia.task.result.EntityResult;
@@ -87,6 +88,13 @@ public class CoursesListFragment extends AppFragment implements SharedPreference
             if (TextUtilsJava.equals(intent.getAction(), ACTION_COURSES_UPDATES)) {
                 displayCourses();
             }
+        }
+    };
+
+    BroadcastReceiver userTypeUpdatedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            displayCourses();
         }
     };
 
@@ -156,6 +164,9 @@ public class CoursesListFragment extends AppFragment implements SharedPreference
         IntentFilter coursesUpdatesBroadcastFilter = new IntentFilter(ACTION_COURSES_UPDATES);
         ContextCompat.registerReceiver(getActivity(), coursesUpdatesReceiver, coursesUpdatesBroadcastFilter, ContextCompat.RECEIVER_NOT_EXPORTED);
 
+        IntentFilter userTypeFilter = new IntentFilter(FetchUserTask.ACTION_USER_TYPE_UPDATED);
+        ContextCompat.registerReceiver(getActivity(), userTypeUpdatedReceiver, userTypeFilter, ContextCompat.RECEIVER_NOT_EXPORTED);
+
         if (adapterListCourses != null) {
             adapterListCourses.notifyDataSetChanged();
         }
@@ -166,6 +177,7 @@ public class CoursesListFragment extends AppFragment implements SharedPreference
         super.onPause();
         getActivity().unregisterReceiver(receiver);
         getActivity().unregisterReceiver(coursesUpdatesReceiver);
+        getActivity().unregisterReceiver(userTypeUpdatedReceiver);
     }
 
     private void displayCourses() {

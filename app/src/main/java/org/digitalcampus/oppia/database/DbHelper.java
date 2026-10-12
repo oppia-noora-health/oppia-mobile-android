@@ -77,7 +77,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
     private static final String TAG = DbHelper.class.getSimpleName();
     public static final String DB_NAME = "mobilelearning.db";
-    public static final int DB_VERSION = 51;
+    public static final int DB_VERSION = 53;
     private static final String TEXT = "text";
     private static final String DESC = "DESC";
     private static final String AND = " AND ";
@@ -212,6 +212,7 @@ public class DbHelper extends SQLiteOpenHelper {
     private static final String USER_C_JOBTITLE = "jobTitle";
     private static final String USER_C_ORGANIZATION = "organisation";
     private static final String USER_C_PHONE = "phoneNo";
+    private static final String USER_C_USER_TYPE = "user_type";
 
     private static final String COHORT_USER_TABLE = "CohortUser";
     private static final String COHORT_USER_C_COHORT = "cohort";
@@ -426,7 +427,8 @@ public class DbHelper extends SQLiteOpenHelper {
                 "[" + USER_C_NO_LOGINS + "] integer default 0,  " +
                 "[" + USER_C_POINTS + "] integer default 0,  " +
                 "[" + USER_C_BADGES + "] integer default 0, " +
-                "[" + USER_C_OFFLINE_REGISTER + "] integer default 0 " +
+                "[" + USER_C_OFFLINE_REGISTER + "] integer default 0, " +
+                "[" + USER_C_USER_TYPE + "] TEXT " +
                 ");";
         db.execSQL(sql);
     }
@@ -755,6 +757,16 @@ public class DbHelper extends SQLiteOpenHelper {
         if (oldVersion < 51) {
             db.execSQL(STR_ALTER_TABLE + ACTIVITY_TABLE + STR_ADD_COLUMN + ACTIVITY_C_MIN_ACTIVITY_TIME+ STR_INT_DEFAULT_3 + ";");
         }
+
+        if (oldVersion < 52) {
+            db.execSQL(STR_ALTER_TABLE + USER_TABLE + STR_ADD_COLUMN + USER_C_USER_TYPE + STR_TEXT_NULL + ";");
+        }
+
+        if (oldVersion < 53) {
+            ContentValues values = new ContentValues();
+            values.putNull(USER_C_USER_TYPE);
+            db.update(USER_TABLE, values, null, null);
+        }
     }
 
 
@@ -903,6 +915,7 @@ public class DbHelper extends SQLiteOpenHelper {
         values.put(USER_C_JOBTITLE, user.getJobTitle());
         values.put(USER_C_ORGANIZATION, user.getOrganisation());
         values.put(USER_C_PASSWORDPLAIN, user.isOfflineRegister() ? user.getPassword() : "");
+        values.put(USER_C_USER_TYPE, user.getUserType());
         updateUserCohorts(user.getUsername(), user.getCohorts());
 
         long userId = this.isUser(user.getUsername());
@@ -1179,9 +1192,10 @@ public class DbHelper extends SQLiteOpenHelper {
         ArrayList<Course> courses = new ArrayList<>();
         String order = COURSE_C_ORDER_PRIORITY + " " + DESC + ", " + COURSE_C_TITLE + " ASC";
         String username = getUsername(userId);
-        Cursor c = db.rawQuery(
-                selectCoursesAndRestrictByCohort(username)
-                        + " ORDER BY " + order, null);
+        String query = isUserSuperuser(userId)
+                ? SELECT_ALL_FROM + COURSE_TABLE + " c ORDER BY " + order
+                : selectCoursesAndRestrictByCohort(username) + " ORDER BY " + order;
+        Cursor c = db.rawQuery(query, null);
         c.moveToFirst();
         while (!c.isAfterLast()) {
             Course course = setupCourseObject(c);
@@ -1252,7 +1266,10 @@ public class DbHelper extends SQLiteOpenHelper {
         String s = COURSE_C_SHORTNAME + "=?";
         String[] args = new String[]{shortname};
         String username = getUsername(userId);
-        Cursor c = db.rawQuery(selectCoursesAndRestrictByCohort(username) + AND + s, args);
+        String baseQuery = isUserSuperuser(userId)
+                ? SELECT_ALL_FROM + COURSE_TABLE + " c WHERE "
+                : selectCoursesAndRestrictByCohort(username) + AND;
+        Cursor c = db.rawQuery(baseQuery + s, args);
 
         if (c.getCount() > 0) {
             c.moveToFirst();
@@ -1605,6 +1622,7 @@ public class DbHelper extends SQLiteOpenHelper {
             u.setPassword(c.getString(c.getColumnIndex(USER_C_PASSWORDPLAIN)));
             u.setPasswordAgain(c.getString(c.getColumnIndex(USER_C_PASSWORDPLAIN)));
         }
+        u.setUserType(c.getString(c.getColumnIndex(USER_C_USER_TYPE)));
         fetchUserCustomFields(u);
 
         List<Integer> userCohorts = fetchUserCohorts(u);
@@ -1709,6 +1727,14 @@ public class DbHelper extends SQLiteOpenHelper {
         String[] args = new String[]{userName};
         Cursor c = db.query(USER_TABLE, null, s, args, null, null, null);
         return getUser(c);
+    }
+
+    public boolean isUserSuperuser(long userId) {
+        try {
+            return getUser(userId).isSuperuser();
+        } catch (UserNotFoundException e) {
+            return false;
+        }
     }
 
     public User getOneRegisteredUser() throws UserNotFoundException {
@@ -2460,7 +2486,9 @@ public class DbHelper extends SQLiteOpenHelper {
     public List<SearchResult> search(String searchText, int limit, long userId, Context ctx) {
         ArrayList<SearchResult> results = new ArrayList<>();
         String username = getUsername(userId);
-        String selectCoursesSubQuery = "(" + selectCoursesAndRestrictByCohort(username) + ")";
+        String selectCoursesSubQuery = isUserSuperuser(userId)
+                ? "(" + SELECT_ALL_FROM + COURSE_TABLE + " c)"
+                : "(" + selectCoursesAndRestrictByCohort(username) + ")";
         String sqlSeachFullText = String.format("SELECT c.%s AS courseid, a.%s as activitydigest, a.%s as sectionid, 1 AS ranking FROM %s ft " +
                         STR_INNERJOIN_FULLTEXT +
                         STR_INNERJOIN_COURSE +

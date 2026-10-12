@@ -406,7 +406,9 @@ public class CourseActivity extends AppActivity implements OnInitListener, TabLa
             List<Activity> sectionActivities = section.getActivities();
             String preTestTitle = getString(R.string.alert_pretest);
             String actBaselineTitle = isBaseline ? getString(R.string.title_baseline) : "";
-            setTitle(!sectionActivities.isEmpty() && sectionActivities.get(0).getTitle(currentLang).equalsIgnoreCase(preTestTitle) ?
+            Activity firstActivity = !sectionActivities.isEmpty() ? sectionActivities.get(0) : null;
+        setTitle(firstActivity != null && firstActivity.getTitle(currentLang) != null
+                    && firstActivity.getTitle(currentLang).equalsIgnoreCase(preTestTitle) ?
                     preTestTitle : actBaselineTitle);
         }
 

@@ -20,9 +20,9 @@ package org.digitalcampus.oppia.widgets;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -60,6 +60,7 @@ import org.digitalcampus.oppia.model.Activity;
 import org.digitalcampus.oppia.model.Course;
 import org.digitalcampus.oppia.model.QuizAttemptRepository;
 import org.digitalcampus.oppia.model.QuizStats;
+import org.digitalcampus.oppia.utils.ImageUtils;
 import org.digitalcampus.oppia.utils.TextUtilsJava;
 import org.digitalcampus.oppia.utils.UIUtils;
 import org.digitalcampus.oppia.utils.resources.ExternalResourceOpener;
@@ -299,7 +300,8 @@ public abstract class AnswerWidget extends BaseWidget {
             binding.questionImage.setVisibility(View.GONE);
         } else {
             String fileUrl = course.getLocation() + q.getProp("image");
-            Bitmap myBitmap = BitmapFactory.decodeFile(fileUrl);
+            DisplayMetrics dm = super.getActivity().getResources().getDisplayMetrics();
+            Bitmap myBitmap = ImageUtils.decodeSampledBitmapFromFile(fileUrl, dm.widthPixels, dm.heightPixels);
             File file = new File(fileUrl);
             binding.questionImageImage.setImageBitmap(myBitmap);
             binding.questionImageImage.setTag(file);

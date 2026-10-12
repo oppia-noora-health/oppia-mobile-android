@@ -28,6 +28,7 @@ import org.digitalcampus.mobile.learning.R;
 import org.digitalcampus.mobile.learning.databinding.ActivityMainBinding;
 import org.digitalcampus.mobile.learning.databinding.DrawerHeaderBinding;
 import org.digitalcampus.mobile.learning.databinding.ViewBadgeBinding;
+import org.digitalcampus.oppia.api.ApiEndpoint;
 import org.digitalcampus.oppia.application.App;
 import org.digitalcampus.oppia.application.PermissionsManager;
 import org.digitalcampus.oppia.fragments.BadgesFragment;
@@ -39,6 +40,7 @@ import org.digitalcampus.oppia.model.CoursesRepository;
 import org.digitalcampus.oppia.model.Lang;
 import org.digitalcampus.oppia.model.User;
 import org.digitalcampus.oppia.task.FetchServerInfoTask;
+import org.digitalcampus.oppia.task.FetchUserTask;
 import org.digitalcampus.oppia.utils.ConnectionUtils;
 import org.digitalcampus.oppia.utils.UIUtils;
 import org.digitalcampus.oppia.utils.ui.AppTourManager;
@@ -62,6 +64,9 @@ public class MainActivity extends AppActivity implements BottomNavigationView.On
 
     @Inject
     CoursesRepository coursesRepository;
+
+    @Inject
+    ApiEndpoint apiEndpoint;
     private ActivityMainBinding binding;
     private DrawerHeaderBinding bindingHeader;
     private ViewBadgeBinding bindingBadgeView;
@@ -165,8 +170,10 @@ public class MainActivity extends AppActivity implements BottomNavigationView.On
 
         configureUserOptions();
         updateUserTotalPoints();
-
         checkStagingServer();
+
+        User currentUser = getAppComponent().getUser();
+        new FetchUserTask().updateLoggedUserProfile(this, apiEndpoint, currentUser);
     }
 
     @Override

@@ -147,6 +147,9 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
+		if (activity == null || course == null) {
+			return;
+		}
 		// get the location data
 		String url = course.getLocation() + activity.getLocation(prefLang);
 		int defaultFontSize = Integer.parseInt(prefs.getString(PrefsActivity.PREF_TEXT_SIZE, "16"));
@@ -229,7 +232,10 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 				for (JSInterface jsInterface : jsInterfaces){
 					view.loadUrl(jsInterface.getJavascriptInjection());
 				}
-				view.evaluateJavascript("changeAudioSource('" + Storage.getMediaPath(getContext()) + "')", null);
+				Context ctx = getContext();
+				if (ctx != null) {
+					view.evaluateJavascript("changeAudioSource('" + Storage.getMediaPath(ctx) + "')", null);
+				}
 			}
 
 			// set up the page to intercept videos
@@ -449,20 +455,13 @@ public class PageWidget extends BaseWidget implements JSInterfaceForInlineInput.
 		if (config.containsKey(BaseWidget.PROPERTY_ACTIVITY_STARTTIME)) {
 			this.setStartTime((Long) config.get(BaseWidget.PROPERTY_ACTIVITY_STARTTIME));
 		}
-		if (config.containsKey(BaseWidget.PROPERTY_ACTIVITY)) {
-			activity = (Activity) config.get(BaseWidget.PROPERTY_ACTIVITY);
-		}
-		if (config.containsKey(BaseWidget.PROPERTY_COURSE)) {
-			course = (Course) config.get(BaseWidget.PROPERTY_COURSE);
-		}
 	}
 
 	@Override
 	public HashMap<String, Object> getWidgetConfig() {
 		HashMap<String, Object> config = new HashMap<>();
 		config.put(BaseWidget.PROPERTY_ACTIVITY_STARTTIME, this.getStartTime());
-		config.put(BaseWidget.PROPERTY_ACTIVITY, this.activity);
-		config.put(BaseWidget.PROPERTY_COURSE, this.course);
+		// Activity and Course are re-fetched via CompleteCourseHolder/CourseHolder on restore
 		return config;
 	}
 

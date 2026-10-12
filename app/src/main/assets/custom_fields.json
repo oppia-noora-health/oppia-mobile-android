@@ -87,6 +87,22 @@
       "required":false,
       "helper_text":"",
       "type":"str"
+    },
+    {
+      "name":"trainer_type",
+      "label":"Trainer Type",
+      "order":8,
+      "required":false,
+      "helper_text":"",
+      "type":"str"
+    },
+    {
+      "name":"date_of_tot",
+      "label":"Date of TOT",
+      "order":8,
+      "required":false,
+      "helper_text":"",
+      "type":"str"
     }
   ],
   "required_fields": ["phoneno"],
@@ -113,7 +129,9 @@
         "facility_type",
         "state",
         "district",
-        "province"
+        "province",
+        "trainer_type",
+        "date_of_tot"
       ]
     }
   ]

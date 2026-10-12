@@ -193,6 +193,10 @@ public class LoginTask extends APIRequestTask<User, Object, EntityResult<User>> 
             if (response.isSuccessful()) {
                 JSONObject jsonResp = new JSONObject(response.body().string());
 
+                if (jsonResp.has(User.USER_TYPE)) {
+                    user.setUserType(jsonResp.getString(User.USER_TYPE));
+                }
+
                 // Create a latch to wait for the async call to finish
                 java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
 
